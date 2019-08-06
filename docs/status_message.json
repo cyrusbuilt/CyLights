@@ -1,0 +1,27 @@
+{
+    "client_id": "cylights-0",
+    "state": 1,
+    "firmwareVersion": "1.0",
+    "lights": [
+        {
+            "id": 1,
+            "state": 1
+        },
+        {
+            "id": 2,
+            "state": 0
+        },
+        {
+            "id": 3,
+            "state": 1
+        },
+        {
+            "id": 4,
+            "state": 1
+        },
+        {
+            "id": 5,
+            "state": 0
+        }
+    ]
+}

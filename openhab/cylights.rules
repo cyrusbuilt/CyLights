@@ -1,0 +1,108 @@
+// NOTE: Commands taken from TelemetryHelper.h
+var String jsonString = ""
+
+rule "Send System Command"
+when
+    Item systemCommand changed
+then
+    switch(systemCommand.state.toString()) {
+        case "Disable":
+            jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":0}"
+            break
+        case "Enable":
+            jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":1}"
+            break
+        case "Reboot":
+            jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":2}"
+            break
+        case "Request Status":
+            jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":3}"
+            break
+    }
+
+    cmd.sendCommand(jsonString)
+end
+
+rule "Turn Light1 On/Off"
+when
+    Item light1Switch changed
+then
+    if (light1Switch.state == ON) {
+        jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":4}"
+    }
+    else {
+        jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":5}"
+    }
+
+    cmd.sendCommand(jsonString)
+end
+
+rule "Turn Light2 On/Off"
+when
+    Item light2Switch changed
+then
+    if (light2Switch.state == ON) {
+        jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":6}"
+    }
+    else {
+        jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":7}"
+    }
+
+    cmd.sendCommand(jsonString)
+end
+
+rule "Turn Light3 On/Off"
+when
+    Item light3Switch changed
+then
+    if (light3Switch.state == ON) {
+        jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":8}"
+    }
+    else {
+        jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":9}"
+    }
+
+    cmd.sendCommand(jsonString)
+end
+
+rule "Turn Light4 On/Off"
+when
+    Item light4Switch changed
+then
+    if (light3Switch.state == ON) {
+        jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":10}"
+    }
+    else {
+        jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":11}"
+    }
+
+    cmd.sendCommand(jsonString)
+end
+
+rule "Turn Light5 On/Off"
+when
+    Item light5Switch changed
+then
+    if (light3Switch.state == ON) {
+        jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":12}"
+    }
+    else {
+        jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":13}"
+    }
+
+    cmd.sendCommand(jsonString)
+end
+
+rule "Turn All Lights On/Off"
+when
+    Item allSwitch changed
+then
+    if (allSwitch.state == ON) {
+        jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":14}"
+    }
+    else {
+        jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":15}"
+    }
+
+    cmd.sendCommand(jsonString)
+end

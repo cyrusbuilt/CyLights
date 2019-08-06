@@ -1,0 +1,23 @@
+sitemap cylights label="CyLights" {
+    // NOTE: commands and states taken from TelemetryHelper.h
+    Frame label="System Status and Control" {
+        Text item=systemID
+        Text item=firmwareVersion
+        Text item=systemState mappings=[0="Booting",1="Normal",2="Updating",3="Reconnecting",4="Disabled",5="Check-in"]
+        Selection item=sendCommand mappings=[0="Disable",1="Enable",2="Reboot",3="Request Status"]
+    }
+
+    Frame label="Outlet Status and Control" {
+        Text item=light1Status mappings=[0="ON",1="OFF"]
+        Switch item=light1Switch
+        Text item=light2Status mappings=[0="ON",1="OFF"]
+        Switch item=light2Switch
+        Text item=light3Status mappings=[0="ON",1="OFF"]
+        Switch item=light3Switch
+        Text item=light4Status mappings=[0="ON",1="OFF"]
+        Switch item=light4Switch
+        Text item=light5Status mappings=[0="ON",1="OFF"]
+        Switch item=light5Switch
+        Switch item=allSwitch
+    }
+}
