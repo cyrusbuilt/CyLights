@@ -1,23 +1,23 @@
 String systemID "System ID: [%s]" <keyring> { mqtt="<[broker:cylights/status:state:JSONPATH($.client_id)]" }
 String firmwareVersion "Firmware version: [%s]" { mqtt="<[broker:cylights/status:state:JSONPATH($.firmwareVersion)]" }
-Number systemState "System State: [%d]" <status> { mqtt="<[broker:cylights/status:state:JSONPATH($.state)]" }
+Number systemState <status> { mqtt="<[broker:cylights/status:state:JSONPATH($.state)]" }
 
 String systemCommand "Control" <switch>
 String cmd { mqtt=">[broker:cylights/control:command:*:default]" }
 
-Number light1Status "Outlet 1 State: [%d]" <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[0].state)]" }
+Number light1Status <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[0].state)]" }
 Switch light1Switch "Outlet 1" <slider>
 
-Number light2Status "Outlet 2 State: [%d]" <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[1].state)]" }
+Number light2Status <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[1].state)]" }
 Switch light2Switch "Outlet 2" <slider>
 
-Number light3Status "Outlet 3 State: [%d]" <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[2].state)]" }
+Number light3Status <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[2].state)]" }
 Switch light3Switch "Outlet 3" <slider>
 
-Number light4Status "Outlet 4 State: [%d]" <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[3].state)]" }
+Number light4Status <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[3].state)]" }
 Switch light4Switch "Outlet 4" <slider>
 
-Number light5Status "Outlet 5 State: [%d]" <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[4].state)]" }
+Number light5Status <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[4].state)]" }
 Switch light5Switch "Outlet 5" <slider>
 
 Switch allSwitch "All Lights" <slider>

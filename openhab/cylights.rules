@@ -1,25 +1,25 @@
 // NOTE: Commands taken from TelemetryHelper.h
+val String fileName = "cylights.rules"
 var String jsonString = ""
+var String cmd = ""
 
 rule "Send System Command"
 when
     Item systemCommand changed
 then
-    switch(systemCommand.state.toString()) {
+    cmd = systemCommand.state.toString()
+    switch(cmd) {
         case "Disable":
             jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":0}"
-            break
         case "Enable":
             jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":1}"
-            break
         case "Reboot":
             jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":2}"
-            break
         case "Request Status":
             jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":3}"
-            break
     }
 
+    logInfo(fileName, "Sending command: " + cmd)
     cmd.sendCommand(jsonString)
 end
 
