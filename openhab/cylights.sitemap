@@ -3,21 +3,37 @@ sitemap cylights label="CyLights" {
     Frame label="System Status and Control" {
         Text item=systemID
         Text item=firmwareVersion
-        Text item=systemState mappings=[0="Booting",1="Normal",2="Updating",3="Reconnecting",4="Disabled",5="Check-in"]
-        Selection item=sendCommand mappings=[0="Disable",1="Enable",2="Reboot",3="Request Status"]
+        Text item=systemState label="System State: Booting" visibility=[systemState==0]
+        Text item=systemState label="System State: Normal" visibility=[systemState==1]
+        Text item=systemState label="System State: Updating" visibility=[systemState==2]
+        Text item=systemState label="System State: Reconnecting" visibility=[systemState==3]
+        Text item=systemState label="System State: Disabled" visibility=[systemState==4]
+        Text item=systemState label="System State: Check-in" visibility=[systemState==5]
+        Text item=systemState label="System State: Offline" visibility=[systemState==NULL,systemState==UNDEF]
+        Selection item=systemCommand label="Control" mappings=[0="Disable",1="Enable",2="Reboot",3="Request Status"]
     }
 
     Frame label="Outlet Status and Control" {
-        Text item=light1Status mappings=[0="ON",1="OFF"]
         Switch item=light1Switch
-        Text item=light2Status mappings=[0="ON",1="OFF"]
+        Text item=light1Status label="Outlet 1 State: ON" visibility=[light1Status==1]
+        Text item=light1Status label="Outlet 1 State: OFF" visibility=[light1Status==0,light1Status==NULL,light1Status==UNDEF]
+
         Switch item=light2Switch
-        Text item=light3Status mappings=[0="ON",1="OFF"]
+        Text item=light2Status label="Outlet 2 State: ON" visibility=[light2Status==1]
+        Text item=light2Status label="Outlet 2 State: OFF" visibility=[light2Status==0,light2Status==NULL,light2Status==UNDEF]
+
         Switch item=light3Switch
-        Text item=light4Status mappings=[0="ON",1="OFF"]
+        Text item=light3Status label="Outlet 3 State: ON" visibility=[light3Status==1]
+        Text item=light3Status label="Outlet 3 State: OFF" visibility=[light3Status==0,light3Status==NULL,light3Status==UNDEF]
+
         Switch item=light4Switch
-        Text item=light5Status mappings=[0="ON",1="OFF"]
+        Text item=light4Status label="Outlet 4 State: ON" visibility=[light4Status==1]
+        Text item=light4Status label="Outlet 4 State: OFF" visibility=[light4Status==0,light4Status==NULL,light4Status==UNDEF]
+
         Switch item=light5Switch
+        Text item=light5Status label="Outlet 5 State: ON" visibility=[light5Status==1]
+        Text item=light5Status label="Outlet 5 State: OFF" visibility=[light5Status==0,light5Status==NULL,light5Status==UNDEF]
+
         Switch item=allSwitch
     }
 }
