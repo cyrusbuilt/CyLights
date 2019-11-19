@@ -1,13 +1,15 @@
 // NOTE: Commands taken from TelemetryHelper.h
 val String fileName = "cylights.rules"
+val String controlChannel = "cylights/control"
 var String jsonString = ""
 var String cmd = ""
+val actionsBroker = getActions("mqtt", "mqtt:broker:mosquitto")
 
 rule "Send System Command"
 when
-    Item systemCommand changed
+    Item CyLightsSystemCommand changed
 then
-    cmd = systemCommand.state.toString()
+    cmd = CyLightsSystemCommand.state.toString()
     switch(cmd) {
         case "Disable":
             jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":0}"
@@ -19,90 +21,97 @@ then
             jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":3}"
     }
 
-    logInfo(fileName, "Sending command: " + cmd)
-    cmd.sendCommand(jsonString)
+    logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
+    actionsBroker.publishMQTT(controlChannel, jsonString)
+    CyLightsSystemCommand.postUpdate(NULL)
 end
 
 rule "Turn Light1 On/Off"
 when
-    Item light1Switch changed
+    Item CyLights_Light1Switch changed
 then
-    if (light1Switch.state == ON) {
+    if (CyLights_Light1Switch.state == ON) {
         jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":4}"
     }
     else {
         jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":5}"
     }
 
-    cmd.sendCommand(jsonString)
+    logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
+    actionsBroker.publishMQTT(controlChannel, jsonString)
 end
 
 rule "Turn Light2 On/Off"
 when
-    Item light2Switch changed
+    Item CyLights_Light2Switch changed
 then
-    if (light2Switch.state == ON) {
+    if (CyLights_Light2Switch.state == ON) {
         jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":6}"
     }
     else {
         jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":7}"
     }
 
-    cmd.sendCommand(jsonString)
+    logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
+    actionsBroker.publishMQTT(controlChannel, jsonString)
 end
 
 rule "Turn Light3 On/Off"
 when
-    Item light3Switch changed
+    Item CyLights_Light3Switch changed
 then
-    if (light3Switch.state == ON) {
+    if (CyLights_Light3Switch.state == ON) {
         jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":8}"
     }
     else {
         jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":9}"
     }
 
-    cmd.sendCommand(jsonString)
+    logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
+    actionsBroker.publishMQTT(controlChannel, jsonString)
 end
 
 rule "Turn Light4 On/Off"
 when
-    Item light4Switch changed
+    Item CyLights_Light4Switch changed
 then
-    if (light3Switch.state == ON) {
+    if (CyLights_Light4Switch.state == ON) {
         jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":10}"
     }
     else {
         jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":11}"
     }
 
-    cmd.sendCommand(jsonString)
+    logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
+    actionsBroker.publishMQTT(controlChannel, jsonString)
 end
 
 rule "Turn Light5 On/Off"
 when
-    Item light5Switch changed
+    Item CyLights_Light5Switch changed
 then
-    if (light3Switch.state == ON) {
+    if (CyLights_Light5Switch.state == ON) {
         jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":12}"
     }
     else {
         jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":13}"
     }
 
-    cmd.sendCommand(jsonString)
+    logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
+    actionsBroker.publishMQTT(controlChannel, jsonString)
 end
 
 rule "Turn All Lights On/Off"
 when
-    Item allSwitch changed
+    Item CyLightsAllSwitch changed
 then
-    if (allSwitch.state == ON) {
+    if (CyLightsAllSwitch.state == ON) {
         jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":14}"
     }
     else {
         jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":15}"
     }
 
-    cmd.sendCommand(jsonString)
+    logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
+    actionsBroker.publishMQTT(controlChannel, jsonString)
 end

@@ -1,0 +1,12 @@
+Thing mqtt:topic:mosquitto:controller "MQTT Thing CyLights" (mqtt:broker:mosquitto) @ "CyLights" {
+    Channels:
+        Type string : Version [stateTopic="cylights/status", transformationPattern="JSONPATH:$.firmwareVersion"]
+        Type string : SysState [stateTopic="cylights/status", transformationPattern="JSONPATH:$.systemState"]
+        Type string : SysID [stateTopic="cylights/status", transformationPattern="JSONPATH:$.client_id"]
+        Type number : Light1Status [stateTopic="cylights/status", transformationPattern="JSONPATH:$.lights[0].state"]
+        Type number : Light2Status [stateTopic="cylights/status", transformationPattern="JSONPATH:$.lights[1].state"]
+        Type number : Light3Status [stateTopic="cylights/status", transformationPattern="JSONPATH:$.lights[2].state"]
+        Type number : Light4Status [stateTopic="cylights/status", transformationPattern="JSONPATH:$.lights[3].state"]
+        Type number : Light5Status [stateTopic="cylights/status", transformationPattern="JSONPATH:$.lights[4].state"]
+        Type switch : Activator [commandTopic="cylights/control"]
+}

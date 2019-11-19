@@ -1,23 +1,21 @@
-String systemID "System ID: [%s]" <keyring> { mqtt="<[broker:cylights/status:state:JSONPATH($.client_id)]" }
-String firmwareVersion "Firmware version: [%s]" { mqtt="<[broker:cylights/status:state:JSONPATH($.firmwareVersion)]" }
-Number systemState <status> { mqtt="<[broker:cylights/status:state:JSONPATH($.state)]" }
+String CyLightsSystemID "System ID: [%s]" <keyring> { channel="mqtt:topic:mosquitto:cylights:SysID" }
+String CyLightsVersion "Firmware version: [%s]" { channel="mqtt:topic:mosquitto:cylights:Version" }
+Number CyLightsSysState <status> { channel="mqtt:topic:mosquitto:cylights:SysState" }
 
-String systemCommand "Control" <switch>
-String cmd { mqtt=">[broker:cylights/control:command:*:default]" }
+Number CyLights_Light1Status <poweroutlet_us> { channel="mqtt:topic:mosquitto:cylights:Light1Status" }
+Switch CyLights_Light1Switch "Outlet 1" <slider>
 
-Number light1Status <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[0].state)]" }
-Switch light1Switch "Outlet 1" <slider>
+Number CyLights_Light2Status <poweroutlet_us> { channel="mqtt:topic:mosquitto:cylights:Light2Status" }
+Switch CyLights_Light2Switch "Outlet 2" <slider>
 
-Number light2Status <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[1].state)]" }
-Switch light2Switch "Outlet 2" <slider>
+Number CyLights_Light3Status <poweroutlet_us> { channel="mqtt:topic:mosquitto:cylights:Light3Status" }
+Switch CyLights_Light3Switch "Outlet 3" <slider>
 
-Number light3Status <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[2].state)]" }
-Switch light3Switch "Outlet 3" <slider>
+Number CyLights_Light4Status <poweroutlet_us> { channel="mqtt:topic:mosquitto:cylights:Light4Status" }
+Switch CyLights_Light4Switch "Outlet 4" <slider>
 
-Number light4Status <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[3].state)]" }
-Switch light4Switch "Outlet 4" <slider>
+Number CyLights_Light5Status <poweroutlet_us> { channel="mqtt:topic:mosquitto:cylights:Light5Status" }
+Switch CyLights_Light5Switch "Outlet 5" <slider>
 
-Number light5Status <poweroutlet_us> { mqtt="<[broker:cylights/status:state:JSONPATH($.lights[4].state)]" }
-Switch light5Switch "Outlet 5" <slider>
-
-Switch allSwitch "All Lights" <slider>
+Switch CyLightsAllSwitch "All Lights" <slider>
+String CyLightsSystemCommand "Actions" <switch>

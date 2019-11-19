@@ -1,6 +1,6 @@
 /**
  * main.cpp
- * CyLights v1.0
+ * CyLights v1.1
  * 
  * Author:
  *  Chris (Cyrus) Brunner
@@ -20,6 +20,8 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <FS.h>
+#include <WiFiClientSecure.h>
+#include <time.h>
 #include "TelemetryHelper.h"
 #include "LED.h"
 #include "Relay.h"
@@ -29,38 +31,15 @@
 #include "ESPCrashMonitor-master/ESPCrashMonitor.h"
 #include "CyMCP23016.h"
 #include "ArduinoJson.h"
+#include "config.h"
 
-#define VERSION "1.0"
+#define VERSION "1.1"
 
 // Workaround to allow an MQTT packet size greater than the default of 128.
 #ifdef MQTT_MAX_PACKET_SIZE
 #undef MQTT_MAX_PACKET_SIZE
 #endif
 #define MQTT_MAX_PACKET_SIZE 200
-
-// Configuration
-#define ENABLE_OTA                              // Comment this line to disable OTA updates.
-#define ENABLE_MDNS                             // Comment this line to disable the MDNS.
-#define DEFAULT_SSID "your_ssid_here"           // Put the SSID of your WiFi here.
-#define DEFAULT_PASSWORD "your_password_here"   // Put your WiFi password here.
-#define SERIAL_BAUD 115200                      // The BAUD rate (speed) of the serial port (console).
-#define CONFIG_FILE_PATH "/config.json"         // The path to the config file in SPIFFS.
-#define CHECK_WIFI_INTERVAL 30000               // How often to check WiFi status (milliseconds).
-#define CHECK_MQTT_INTERVAL 35000               // How often to check connectivity to the MQTT broker.
-#define MQTT_TOPIC_STATUS "cylights/status"     // The MQTT channel to publish status messages to.
-#define MQTT_TOPIC_CONTROL "cylights/control"   // The MQTT channel to subscribe to for control messages.
-#define DEVICE_NAME "CYLIGHTS"                  // The device name.
-#define BUTTON_PULSE_DELAY 1000                 // How long to pulse an on/off button.
-#define MQTT_BROKER "your_mqtt_host_here"       // The host name or IP of the MQTT broker to connect to.
-#define MQTT_PORT 1883                          // The MQTT port to connect on (default is 1883).
-#ifdef ENABLE_OTA
-    #include <ArduinoOTA.h>
-    #define OTA_HOST_PORT 8266                     // The OTA updater port.
-    #define OTA_PASSWORD "your_ota_password_here"  // The OTA updater password.
-#endif
-IPAddress ip(192, 168, 0, 220);                 // The default static host IP.
-IPAddress gw(192, 168, 0, 1);                   // The default static gateway IP.
-IPAddress sm(255, 255, 255, 0);                 // The default static subnet mask.
 
 // Pin definitions
 #define PIN_ACT_LED 14
@@ -87,15 +66,16 @@ void onCheckWiFi();
 void onCheckMqtt();
 void failSafe();
 void onMqttMessage(char* topic, byte* payload, unsigned int length);
+void onSyncClock();
 
 // Global vars
 #ifdef ENABLE_MDNS
-#include <ESP8266mDNS.h>
-MDNSResponder mdns;
+    #include <ESP8266mDNS.h>
+    MDNSResponder mdns;
 #endif
+WiFiClientSecure wifiClient;
 CyMCP23016 mcp;
-WiFiClient netClient;
-PubSubClient mqttClient(netClient);
+PubSubClient mqttClient(wifiClient);
 LED actLED(PIN_ACT_LED, NULL);
 Task tCheckWifi(CHECK_WIFI_INTERVAL, TASK_FOREVER, &onCheckWiFi);
 Task tCheckMqtt(CHECK_MQTT_INTERVAL, TASK_FOREVER, &onCheckMqtt);
@@ -106,13 +86,19 @@ String hostName = DEVICE_NAME;
 String mqttBroker = MQTT_BROKER;
 String controlChannel = MQTT_TOPIC_CONTROL;
 String statusChannel = MQTT_TOPIC_STATUS;
+String mqttUsername = "";
+String mqttPassword = "";
+String serverFingerprintPath;
+String caCertificatePath;
+String fingerprintString;
 int mqttPort = MQTT_PORT;
 bool isDHCP = false;
 bool filesystemMounted = false;
+bool connSecured = false;
 volatile SystemState sysState = SystemState::BOOTING;
 #ifdef ENABLE_OTA
-int otaPort = OTA_HOST_PORT;
-String otaPassword = OTA_PASSWORD;
+    int otaPort = OTA_HOST_PORT;
+    String otaPassword = OTA_PASSWORD;
 #endif
 LightState lastStates[5] = {
     LightState::OFF,
@@ -121,6 +107,30 @@ LightState lastStates[5] = {
     LightState::OFF,
     LightState::OFF
 };
+
+/**
+ * Synchronize the local system clock via NTP. Note: This does not take DST
+ * into account. Currently, you will have to adjust the CLOCK_TIMEZONE define
+ * manually to account for DST when needed.
+ */
+void onSyncClock() {
+    configTime(CLOCK_TIMEZONE * 3600, 0, "pool.ntp.org", "time.nist.gov");
+
+    Serial.print(F("INIT: Waiting for NTP time sync..."));
+    delay(500);
+    while (!time(nullptr)) {
+        ESPCrashMonitor.iAmAlive();
+        Serial.print(F("."));
+        delay(500);
+    }
+
+    time_t now = time(nullptr);
+    struct tm *timeinfo = localtime(&now);
+
+    Serial.println(F("DONE"));
+    Serial.print(F("INFO: Current time: "));
+    Serial.println(asctime(timeinfo));
+}
 
 /**
  * Gets an IPAddress value from the specified string.
@@ -143,7 +153,7 @@ void publishSystemState() {
     if (mqttClient.connected()) {
         DynamicJsonDocument doc(200);
         doc["client_id"] = hostName;
-        doc["state"] = (uint8_t)sysState;
+        doc["systemState"] = (uint8_t)sysState;
         doc["firmwareVersion"] = VERSION;
 
         JsonObject lightObj;
@@ -294,6 +304,12 @@ String getInputString() {
 void printNetworkInfo() {
     Serial.print(F("INFO: Local IP: "));
     Serial.println(WiFi.localIP());
+    Serial.print(F("INFO: Gateway: "));
+    Serial.println(WiFi.gatewayIP());
+    Serial.print(F("INFO: Subnet mask: "));
+    Serial.println(WiFi.subnetMask());
+    Serial.print(F("INFO: DNS server: "));
+    Serial.println(WiFi.dnsIP());
     Serial.print(F("INFO: MAC address: "));
     Serial.println(WiFi.macAddress());
     WiFi.printDiag(Serial);
@@ -340,15 +356,20 @@ void saveConfiguration() {
     doc["ip"] = ip.toString();
     doc["gateway"] = gw.toString();
     doc["subnetMask"] = sm.toString();
+    doc["dnsServer"] = dns.toString();
     doc["wifiSSID"] = ssid;
     doc["wifiPassword"] = password;
     doc["mqttBroker"] = mqttBroker;
     doc["mqttPort"] = mqttPort;
     doc["mqttControlChannel"] = controlChannel;
     doc["mqttStatusChannel"] = statusChannel;
+    doc["mqttUsername"] = mqttUsername;
+    doc["mqttPassword"] = mqttPassword;
+    doc["serverFingerprintPath"] = serverFingerprintPath;
+    doc["caCertificatePath"] = caCertificatePath;
     #ifdef ENABLE_OTA
-    doc["otaPort"] = otaPort;
-    doc["otaPassword"] = otaPassword;
+        doc["otaPort"] = otaPort;
+        doc["otaPassword"] = otaPassword;
     #endif
 
     File configFile = SPIFFS.open(CONFIG_FILE_PATH, "w");
@@ -435,18 +456,27 @@ void loadConfiguration() {
         Serial.println(F("WARN: Invalid subnet mask in configuration. Falling back to factory default."));
     }
 
+    if (!dns.fromString(doc["dnsServer"].as<String>())) {
+        Serial.println(F("WARN: Invalid DNS server in configuration. Falling back to factory default."));
+    }
+
     ssid = doc["wifiSSID"].as<String>();
     password = doc["wifiPassword"].as<String>();
     mqttBroker = doc["mqttBroker"].as<String>();
     mqttPort = doc["mqttPort"].as<int>();
     controlChannel = doc["mqttControlChannel"].as<String>();
     statusChannel = doc["mqttStatusChannel"].as<String>();
+    mqttUsername = doc["mqttUsername"].as<String>();
+    mqttPassword = doc["mqttPassword"].as<String>();
+    serverFingerprintPath = doc["serverFingerprintPath"].as<String>();
+    caCertificatePath = doc["caCertificatePath"].as<String>();
     #ifdef ENABLE_OTA
-    otaPort = doc["otaPort"].as<int>();
-    otaPassword = doc["otaPassword"].as<String>();
+        otaPort = doc["otaPort"].as<int>();
+        otaPassword = doc["otaPassword"].as<String>();
     #endif
 
     doc.clear();
+    buf.release();
     Serial.println(F("DONE"));
 }
 
@@ -585,6 +615,107 @@ void handleControlRequest(String id, ControlCommand command) {
 }
 
 /**
+ * Loads the SSL certificates and server fingerprint necessary to establish
+ * a connection the the MQTT broker over TLS.
+ * @return true if the certificates and server fingerprint were successfully
+ * loaded; Otherwise, false.
+ */
+bool loadCertificates() {
+    Serial.print(F("INFO: Loading SSL certificates... "));
+    if (!filesystemMounted) {
+        Serial.println(F("FAIL"));
+        Serial.println(F("ERROR: Filesystem not mounted."));
+        return false;
+    }
+
+    if (!SPIFFS.exists(caCertificatePath)) {
+        Serial.println(F("FAIL"));
+        Serial.println(F("ERROR: CA certificate does not exist."));
+        return false;
+    }
+
+    File ca = SPIFFS.open(caCertificatePath, "r");
+    if (!ca) {
+        Serial.println(F("FAIL"));
+        Serial.println(F("ERROR: Could not open CA certificate."));
+        return false;
+    }
+
+    String caContents = ca.readString();
+    ca.close();
+    X509List caCertX509(caContents.c_str());
+
+    wifiClient.setTrustAnchors(&caCertX509);
+    wifiClient.allowSelfSignedCerts();
+
+    if (!SPIFFS.exists(serverFingerprintPath)) {
+        Serial.println(F("FAIL"));
+        Serial.println(F("ERROR: Server fingerprint file path does not exist."));
+        return false;
+    }
+
+    File fp = SPIFFS.open(serverFingerprintPath, "r");
+    if (!fp) {
+        Serial.println(F("FAIL"));
+        Serial.println(F("ERROR: Could not open fingerprint file."));
+        return false;
+    }
+
+    String val;
+    if (fp.available()) {
+        String fileContent = fp.readString();
+        val = fileContent.substring(fileContent.lastIndexOf("=") + 1);
+        val.replace(':', ' ');
+    }
+
+    fp.close();
+    if (val.length() > 0) {
+        fingerprintString = val;
+        wifiClient.setFingerprint(fingerprintString.c_str());
+    }
+    else {
+        Serial.println(F("FAIL"));
+        Serial.println(F("ERROR: Failed to read server fingerprint."));
+        return false;
+    }
+    
+    Serial.println(F("DONE"));
+    return true;
+}
+
+/**
+ * Verifies a connection can be made to the MQTT broker over TLS.
+ * @return true if a connection to the MQTT broker over TLS was established
+ * successfully; Otherwise, false.
+ */
+bool verifyTLS() {
+    // Because it can take longer than expected to establish an
+    // encrypted connection the MQTT broker, we need to disable
+    // the watchdog to prevent reboot due to watchdog timeout during
+    // connection, then re-enable when we are done.
+    ESPCrashMonitor.disableWatchdog();
+
+    // Currently, we sync the clock any time we need to verify TLS. This is
+    // because in a future version, this will be required in order to validate
+    // public CA certificates.
+    onSyncClock();
+
+    Serial.print(F("INFO: Verifying connectivity over TLS... "));
+    bool result = wifiClient.connect(mqttBroker, mqttPort);
+    if (result) {
+        wifiClient.stop();
+        Serial.println(F("DONE"));
+    }
+    else {
+        Serial.println(F("FAIL"));
+        Serial.println(F("ERROR: TLS connection failed."));
+    }
+
+    ESPCrashMonitor.enableWatchdog(ESPCrashMonitorClass::ETimeout::Timeout_2s);
+    return result;
+}
+
+/**
  * Handles incoming messages from the controlChannel channel the
  * system is subscribed to.
  * @param topic The topic the message was received on.
@@ -621,8 +752,12 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
 }
 
 /**
- * Reconnects to the MQTT broker if disconnected.
- * @returns true if connection successful; Otherwise, false.
+ * Attempts to re-connect to the MQTT broker if then connection is
+ * currently broken.
+ * @return true if a connection to the MQTT broker is either already
+ * established, or was successfully re-established; Otherwise, false.
+ * If the connection is re-established, then will also re-subscribe to
+ * the status channel.
  */
 bool reconnectMqttClient() {
     if (!mqttClient.connected()) {
@@ -631,7 +766,24 @@ bool reconnectMqttClient() {
         Serial.print(F(" on port: "));
         Serial.print(mqttPort);
         Serial.println(F("..."));
-        if (mqttClient.connect(hostName.c_str())) {
+        if (!connSecured) {
+            connSecured = verifyTLS();
+            if (!connSecured) {
+                Serial.println(F("ERROR: Unable to establish TLS connection to host."));
+                Serial.println(F("ERROR: Invalid certificate or SSL negotiation failed."));
+                return false;
+            }
+        }
+
+        bool didConnect = false;
+        if (mqttUsername.length() > 0 && mqttPassword.length() > 0) {
+            didConnect = mqttClient.connect(hostName.c_str(), mqttUsername.c_str(), mqttPassword.c_str());
+        }
+        else {
+            didConnect = mqttClient.connect(hostName.c_str());
+        }
+
+        if (didConnect) {
             Serial.print(F("INFO: Subscribing to channel: "));
             Serial.println(controlChannel);
             mqttClient.subscribe(controlChannel.c_str());
@@ -658,6 +810,7 @@ void onCheckMqtt() {
     Serial.println(F("INFO: Checking MQTT connection status..."));
     if (reconnectMqttClient()) {
         Serial.println(F("INFO: Successfully reconnected to MQTT broker."));
+        publishSystemState();
     }
     else {
         Serial.println(F("ERROR: MQTT connection lost and reconnect failed."));
@@ -727,7 +880,7 @@ void initMDNS() {
             }
             
             #ifdef ENABLE_OTA
-            mdns.addService(hostName, "ota", otaPort);
+                mdns.addService(hostName, "ota", otaPort);
             #endif
             Serial.println(F(" DONE"));
         }
@@ -791,11 +944,11 @@ void connectWifi() {
     delay(1000);
     if (isDHCP) {
         // If set to all zeros, then the SDK assumes DHCP.
-        WiFi.config(0U, 0U, 0U);
+        WiFi.config(0U, 0U, 0U, 0U);
     }
     else {
         // If actual IP set, then disables DHCP and assumes static.
-        WiFi.config(ip, gw, sm);
+        WiFi.config(ip, gw, sm, dns);
     }
 
     Serial.println(F("DEBUG: Beginning connection..."));
@@ -869,6 +1022,58 @@ void configureMQTT() {
 }
 
 /**
+ * Prompts the user for, and configures static IP settings.
+ */
+void configureStaticIP() {
+    isDHCP = false;
+    Serial.println(F("Enter IP address: "));
+    waitForUserInput();
+    ip = getIPFromString(getInputString());
+    Serial.print(F("New IP: "));
+    Serial.println(ip);
+
+    Serial.println(F("Enter gateway: "));
+    waitForUserInput();
+    gw = getIPFromString(getInputString());
+    Serial.print(F("New gateway: "));
+    Serial.println(gw);
+
+    Serial.println(F("Enter subnet mask: "));
+    waitForUserInput();
+    sm = getIPFromString(getInputString());
+    Serial.print(F("New subnet mask: "));
+    Serial.println(sm);
+
+    Serial.println(F("Enter DNS server: "));
+    waitForUserInput();
+    dns = getIPFromString(getInputString());
+    Serial.print(F("New DNS server: "));
+    Serial.println(dns);
+
+    WiFi.config(ip, gw, sm, dns);  // If actual IP set, then disables DHCP and assumes static.
+}
+
+/**
+ * Prompts the user for and then attempts to connect to a new
+ * WiFi network.
+ */
+void configureWiFiNetwork() {
+    Serial.println(F("Enter new SSID: "));
+    waitForUserInput();
+    ssid = getInputString();
+    Serial.print(F("SSID = "));
+    Serial.println(ssid);
+
+    Serial.println(F("Enter new password: "));
+    waitForUserInput();
+    password = getInputString();
+    Serial.print(F("Password = "));
+    Serial.println(password);
+
+    connectWifi();
+}
+
+/**
  * Checks commands entered by the user via serial input and carries out
  * the specified action if valid.
  */
@@ -909,33 +1114,14 @@ void checkCommand() {
             else {
                 isDHCP = true;
                 Serial.println(F("INFO: Set DHCP mode."));
-                WiFi.config(0U, 0U, 0U);
+                WiFi.config(0U, 0U, 0U, 0U);
             }
             promptConfig();
             checkCommand();
             break;
         case 't':
             // Switch to static IP mode. Request IP settings.
-            isDHCP = false;
-            Serial.println(F("Enter IP address: "));
-            waitForUserInput();
-            str = getInputString();
-            ip = getIPFromString(str);
-            Serial.print(F("New IP: "));
-            Serial.println(ip);
-            Serial.println(F("Enter gateway: "));
-            waitForUserInput();
-            str = getInputString();
-            gw = getIPFromString(str);
-            Serial.print(F("New gateway: "));
-            Serial.println(gw);
-            Serial.println(F("Enter subnet mask: "));
-            waitForUserInput();
-            str = getInputString();
-            sm = getIPFromString(str);
-            Serial.print(F("New subnet mask: "));
-            Serial.println(sm);
-            WiFi.config(ip, gw, sm);
+            configureStaticIP();
             promptConfig();
             checkCommand();
             break;
@@ -954,17 +1140,9 @@ void checkCommand() {
             break;
         case 'n':
             // Connect to a new wifi network.
-            Serial.println(F("Enter new SSID: "));
-            waitForUserInput();
-            ssid = getInputString();
-            Serial.print(F("SSID = "));
-            Serial.println(ssid);
-            Serial.println(F("Enter new password: "));
-            waitForUserInput();
-            password = getInputString();
-            Serial.print(F("Password = "));
-            Serial.println(password);
-            connectWifi();
+            configureWiFiNetwork();
+            promptConfig();
+            checkCommand();
             break;
         case 'e':
             // Resume normal operation.
@@ -1139,7 +1317,7 @@ void onCheckWiFi() {
         if (WiFi.status() == WL_CONNECTED) {
             initMDNS();
             initOTA();
-            reconnectMqttClient();
+            initMQTT();
         }
     }
 }
@@ -1167,7 +1345,14 @@ void setup() {
     initWiFi();
     initMDNS();
     initOTA();
-    initMQTT();
+
+    if (loadCertificates()) {
+        if (verifyTLS()) {
+            connSecured = true;
+            initMQTT();
+        }
+    }
+    
     initTaskManager();
     sysState = SystemState::NORMAL;
     Serial.println(F("INIT: Boot sequence complete."));
