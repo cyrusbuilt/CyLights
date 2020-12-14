@@ -20,7 +20,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <FS.h>
-#include <WiFiClientSecure.h>
+#include <WiFiClient.h>
 #include <Wire.h>
 #include <time.h>
 #include "Adafruit_MCP23017.h"
@@ -62,7 +62,7 @@ void onSyncClock();
     #include <ESP8266mDNS.h>
     MDNSResponder mdns;
 #endif
-WiFiClientSecure wifiClient;
+WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 LED actLED(PIN_ACT_LED, NULL);
 Task tCheckWifi(CHECK_WIFI_INTERVAL, TASK_FOREVER, &onCheckWiFi);
@@ -278,6 +278,8 @@ void printWarningAndContinue(const __FlashStringHelper *message) {
  * 5) The config file could not be deserialized to a JSON structure.
  */
 void loadConfiguration() {
+    memset(&config, 0, sizeof(config));
+
     Serial.print(F("INFO: Loading config file: "));
     Serial.print(CONFIG_FILE_PATH);
     Serial.print(F(" ... "));
@@ -455,9 +457,11 @@ void handleControlRequest(ControlCommand command) {
 
     switch (command) {
         case ControlCommand::ALL_OFF:
+            Serial.println(F("INFO: Turning all lights off."));
             controller.allLightsOff();
             break;
         case ControlCommand::ALL_ON:
+            Serial.println(F("INFO: Turning all lights on."));
             controller.allLightsOn();
             break;
         case ControlCommand::DISABLE:
@@ -469,33 +473,43 @@ void handleControlRequest(ControlCommand command) {
             sysState = SystemState::NORMAL;
             break;
         case ControlCommand::LIGHT1_OFF:
+            Serial.println(F("INFO: Turning light 1 off."));
             controller.setState(LightSelect::ONE, LightState::OFF);
             break;
         case ControlCommand::LIGHT1_ON:
+            Serial.println(F("INFO: Turning light 1 one."));
             controller.setState(LightSelect::ONE, LightState::ON);
             break;
         case ControlCommand::LIGHT2_OFF:
+            Serial.println(F("INFO: Turning light 2 off."));
             controller.setState(LightSelect::TWO, LightState::OFF);
             break;
         case ControlCommand::LIGHT2_ON:
+            Serial.println(F("INFO: Turning light 2 on."));
             controller.setState(LightSelect::TWO, LightState::ON);
             break;
         case ControlCommand::LIGHT3_OFF:
+            Serial.println(F("INFO: Turning light 3 off."));
             controller.setState(LightSelect::THREE, LightState::OFF);
             break;
         case ControlCommand::LIGHT3_ON:
+            Serial.println(F("INFO: Turning light 3 on."));
             controller.setState(LightSelect::THREE, LightState::ON);
             break;
         case ControlCommand::LIGHT4_OFF:
+            Serial.println(F("INFO: Turning light 4 off."));
             controller.setState(LightSelect::FOUR, LightState::OFF);
             break;
         case ControlCommand::LIGHT4_ON:
+            Serial.println(F("INFO: Turning light 4 on."));
             controller.setState(LightSelect::FOUR, LightState::ON);
             break;
         case ControlCommand::LIGHT5_OFF:
+            Serial.println(F("INFO: Turning light 5 off."));
             controller.setState(LightSelect::FIVE, LightState::OFF);
             break;
         case ControlCommand::LIGHT5_ON:
+            Serial.println(F("INFO: Turning light 5 on."));
             controller.setState(LightSelect::FIVE, LightState::ON);
             break;
         case ControlCommand::REBOOT:
@@ -698,16 +712,35 @@ void initOutputs() {
     Serial.print(F("INIT: Initializing outputs... "));
     actLED.init();
     actLED.on();
-    mcp.begin(PIN_SDA, PIN_SCL);
-    if (!mcp.detected()) {
-        Serial.println(F("FAIL"));
-        Serial.print(F("ERROR: I2C device not found at address: "));
-        Serial.println(MCP23016_ADDRESS, HEX);
-        return;
+    Serial.println(F("DONE"));
+}
+
+void initComBus() {
+    Serial.println(F("INIT: Initializing communication bus ..."));
+    Wire.begin();
+    scanBusDevices();
+    if (primaryExpanderFound) {
+        Serial.println(F("INFO: Found primary host bus controller. Enabling."));
+        bus.begin((uint8_t)PRIMARY_I2C_ADDRESS);
+    }
+    else {
+        Serial.println(F("ERROR: Primary host bus controller not found!!"));
+        // TODO HCF???
     }
 
-    allLightsOff();
-    Serial.println(F("DONE"));
+    Serial.println(F("INIT: Comm bus initialization complete."));
+}
+
+void initLightController() {
+    Serial.print(F("INIT: Initializing LightController... "));
+    if (controller.detect()) {
+        controller.init();
+        Serial.println(F("DONE"));
+        return;
+    }
+    
+    Serial.println(F("FAIL"));
+    Serial.println(F("ERROR: LightController not detected."));
 }
 
 /**
@@ -947,6 +980,114 @@ void initCrashMonitor() {
     delay(100);
 }
 
+void handleNewHostname(const char* newHostname) {
+    config.hostname = newHostname;
+    initMDNS();
+}
+
+void handleSwitchToDhcp() {
+    if (config.useDhcp) {
+        Serial.println(F("INFO: DHCP mode already set. Skipping..."));
+        Serial.println();
+    }
+    else {
+        config.useDhcp = true;
+        Serial.println(F("INFO: Set DHCP mode."));
+        WiFi.config(0U, 0U, 0U, 0U);
+    }
+}
+
+void handleSwitchToStatic(IPAddress newIp, IPAddress newSm, IPAddress newGw, IPAddress newDns) {
+    config.ip = newIp;
+    config.sm = newSm;
+    config.gw = newGw;
+    config.dns = newDns;
+    Serial.println(F("INFO: Set static network config."));
+    WiFi.config(config.ip, config.gw, config.sm, config.dns);
+}
+
+void handleReconnectFromConsole() {
+    // Attempt to reconnect to WiFi.
+    onCheckWiFi();
+    if (WiFi.status() == WL_CONNECTED) {
+        printNetworkInfo();
+        resumeNormal();
+    }
+    else {
+        Serial.println(F("ERROR: Still no network connection."));
+        Console.enterCommandInterpreter();
+    }
+}
+
+void handleWifiConfig(String newSsid, String newPassword) {
+    config.ssid = newSsid;
+    config.password = newPassword;
+    connectWifi();
+}
+
+void handleSaveConfig() {
+    saveConfiguration();
+    WiFi.disconnect(true);
+    onCheckWiFi();
+}
+
+void handleMqttConfigCommand(String newBroker, int newPort, String newUsername, String newPassw, String newConChan, String newStatChan) {
+    mqttClient.unsubscribe(config.mqttTopicControl.c_str());
+    mqttClient.disconnect();
+
+    config.mqttBroker = newBroker;
+    config.mqttPort = newPort;
+    config.mqttUsername = newUsername;
+    config.mqttPassword = newPassw;
+    config.mqttTopicControl = newConChan;
+    config.mqttTopicStatus = newStatChan;
+
+    initMQTT();
+    Serial.println();
+}
+
+void turnAllLightsOn() {
+    Serial.println(F("INFO: Turning all lights on."));
+    controller.allLightsOn();
+    publishSystemState();
+}
+
+void turnAllLightsOff() {
+    Serial.println(F("INFO: Turning all lights off."));
+    controller.allLightsOff();
+    publishSystemState();
+}
+
+void initConsole() {
+    Serial.print(F("INIT: Initializing console... "));
+
+    Console.setHostname(config.hostname);
+    Console.setMqttConfig(
+        config.mqttBroker,
+        config.mqttPort,
+        config.mqttUsername,
+        config.mqttPassword,
+        config.mqttTopicControl,
+        config.mqttTopicStatus
+    );
+    Console.onRebootCommand(reboot);
+    Console.onScanNetworks(getAvailableNetworks);
+    Console.onFactoryRestore(doFactoryRestore);
+    Console.onHostnameChange(handleNewHostname);
+    Console.onDhcpConfig(handleSwitchToDhcp);
+    Console.onStaticConfig(handleSwitchToStatic);
+    Console.onReconnectCommand(handleReconnectFromConsole);
+    Console.onWifiConfigCommand(handleWifiConfig);
+    Console.onSaveConfigCommand(handleSaveConfig);
+    Console.onMqttConfigCommand(handleMqttConfigCommand);
+    Console.onConsoleInterrupt(failSafe);
+    Console.onAllLightsOn(turnAllLightsOn);
+    Console.onAllLightsOff(turnAllLightsOff);
+    Console.onResumeCommand(resumeNormal);
+
+    Serial.println(F("DONE"));
+}
+
 /**
  * Bootstrap routine. This is called once at boot and initializes all
  * subsystems.
@@ -955,12 +1096,15 @@ void setup() {
 	initSerial();
     initCrashMonitor();
     initOutputs();
+    initComBus();
+    initLightController();
     initFilesystem();
     initWiFi();
     initMDNS();
     initOTA();
     initMQTT();    
     initTaskManager();
+    initConsole();
     sysState = SystemState::NORMAL;
     Serial.println(F("INIT: Boot sequence complete."));
     ESPCrashMonitor.enableWatchdog(ESPCrashMonitorClass::ETimeout::Timeout_2s);
@@ -971,7 +1115,7 @@ void setup() {
  */
 void loop() {
     ESPCrashMonitor.iAmAlive();
-    checkInterrupt();
+    Console.checkInterrupt();
     taskMan.execute();
     #ifdef ENABLE_MDNS
         mdns.update();

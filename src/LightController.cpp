@@ -99,7 +99,7 @@ uint8_t LightController::getLedAddress(LightSelect light) {
 }
 
 bool LightController::detect() {
-	uint8_t address = this->getLightPinAddress(LightSelect::ONE);
+	uint8_t address = this->getLightPinAddress(LightSelect::ONE, LightState::ON);
 	this->_busController->pinMode(address, INPUT);
 	this->_busController->pullUp(address, LOW);
 	return this->_busController->digitalRead(address) == LOW;
