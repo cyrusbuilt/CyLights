@@ -16,25 +16,6 @@ enum class SystemState: uint8_t {
 };
 
 /**
- * Possible light (outlet) states.
- */
-enum class LightState: uint8_t {
-	OFF = LOW,
-	ON = HIGH
-};
-
-/**
- * Possible light (outlet) IDs.
- */
-enum class Light: uint8_t {
-	ONE = 1,
-	TWO = 2,
-	THREE = 3,
-	FOUR = 4,
-	FIVE = 5
-};
-
-/**
  * Possible remote control commands.
  */
 enum class ControlCommand: uint8_t {

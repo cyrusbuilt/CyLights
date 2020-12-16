@@ -24,6 +24,8 @@ then
     logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
     actionsBroker.publishMQTT(controlChannel, jsonString)
     CyLightsSystemCommand.postUpdate(NULL)
+    jsonString = ""
+    cmd = ""
 end
 
 rule "Turn Light1 On/Off"
@@ -39,6 +41,7 @@ then
 
     logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
     actionsBroker.publishMQTT(controlChannel, jsonString)
+    jsonString = ""
 end
 
 rule "Turn Light2 On/Off"
@@ -54,6 +57,7 @@ then
 
     logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
     actionsBroker.publishMQTT(controlChannel, jsonString)
+    jsonString = ""
 end
 
 rule "Turn Light3 On/Off"
@@ -69,6 +73,7 @@ then
 
     logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
     actionsBroker.publishMQTT(controlChannel, jsonString)
+    jsonString = ""
 end
 
 rule "Turn Light4 On/Off"
@@ -84,6 +89,7 @@ then
 
     logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
     actionsBroker.publishMQTT(controlChannel, jsonString)
+    jsonString = ""
 end
 
 rule "Turn Light5 On/Off"
@@ -99,6 +105,7 @@ then
 
     logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
     actionsBroker.publishMQTT(controlChannel, jsonString)
+    jsonString = ""
 end
 
 rule "Turn All Lights On/Off"
@@ -114,4 +121,5 @@ then
 
     logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
     actionsBroker.publishMQTT(controlChannel, jsonString)
+    jsonString = ""
 end

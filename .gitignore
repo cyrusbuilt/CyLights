@@ -1,42 +1,8 @@
 # PlatformIO project files
-.piolibdeps
 .pio
-.pioenvs
-.clang_complete
-.gcc-flags.json
 
 # MacOS nonsense
 .DS_Store
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
 
 # Decompilation output
 disassembly.txt
@@ -45,4 +11,4 @@ disassembly.txt
 .vscode/
 
 # gerber bundle
-gerber.zip
+*.zip

@@ -4,6 +4,7 @@
 #include <IPAddress.h>
 
 // Configuration
+#define DEBUG                                   // Uncomment to enable additional debug info.
 #define ENABLE_OTA                              // Comment this line to disable OTA updates.
 #define ENABLE_MDNS                             // Comment this line to disable the MDNS.
 #define DEFAULT_SSID "your_ssid_here"           // Put the SSID of your WiFi here.
@@ -25,9 +26,35 @@
     #define OTA_HOST_PORT 8266                     // The OTA updater port.
     #define OTA_PASSWORD "your_ota_password_here"  // The OTA updater password.
 #endif
-IPAddress ip(192, 168, 0, 220);                 // The default static host IP.
-IPAddress gw(192, 168, 0, 1);                   // The default static gateway IP.
-IPAddress sm(255, 255, 255, 0);                 // The default static subnet mask.
-IPAddress dns(gw);
+IPAddress defaultIp(192, 168, 0, 220);                 // The default static host IP.
+IPAddress defaultGw(192, 168, 0, 1);                   // The default static gateway IP.
+IPAddress defaultSm(255, 255, 255, 0);                 // The default static subnet mask.
+IPAddress defaultDns(defaultGw);
+
+typedef struct {
+    // Network stuff
+    String hostname;
+    String ssid;
+    String password;
+    IPAddress ip;
+    IPAddress gw;
+    IPAddress sm;
+    IPAddress dns;
+    bool useDhcp;
+
+    uint8_t clockTimezone;
+
+    // MQTT stuff
+    String mqttTopicStatus;
+    String mqttTopicControl;
+    String mqttBroker;
+    String mqttUsername;
+    String mqttPassword;
+    uint16_t mqttPort;
+
+    // OTA stuff
+    uint16_t otaPort;
+    String otaPassword;
+} config_t;
 
 #endif
