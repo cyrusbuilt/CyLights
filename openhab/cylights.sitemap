@@ -17,23 +17,71 @@ sitemap cylights label="CyLights" {
         Switch item=CyLights_Light1Switch
         Text item=CyLights_Light1Status label="Outlet 1 State: ON" visibility=[CyLights_Light1Status==1]
         Text item=CyLights_Light1Status label="Outlet 1 State: OFF" visibility=[CyLights_Light1Status==0,CyLights_Light1Status==NULL,CyLights_Light1Status==UNDEF]
+        Text label="Light 1 On Time" icon="time" {
+            Setpoint item=CyLights_Light1OnAlarmHour label="Hour" minValue=0 maxValue=23 step=1
+            Setpoint item=CyLights_Light1OnAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
+        }
+        Text label="Light 1 Off Time" icon="time" {
+            Setpoint item=CyLights_Light1OffAlarmHour label="Hour" minValue=0 maxValue=23 step=1
+            Setpoint item=CyLights_Light1OffAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
+        }
 
         Switch item=CyLights_Light2Switch
         Text item=CyLights_Light2Status label="Outlet 2 State: ON" visibility=[CyLights_Light2Status==1]
         Text item=CyLights_Light2Status label="Outlet 2 State: OFF" visibility=[CyLights_Light2Status==0,CyLights_Light2Status==NULL,CyLights_Light2Status==UNDEF]
+        Text label="Light 2 On Time" icon="time" {
+            Setpoint item=CyLights_Light2OnAlarmHour label="Hour" minValue=0 maxValue=23 step=1
+            Setpoint item=CyLights_Light2OnAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
+        }
+        Text label="Light 2 Off Time" icon="time" {
+            Setpoint item=CyLights_Light2OffAlarmHour label="Hour" minValue=0 maxValue=23 step=1
+            Setpoint item=CyLights_Light2OffAlarmMinute label="Hour" minValue=0 maxValue=55 step=5
+        }
 
         Switch item=CyLights_Light3Switch
         Text item=CyLights_Light3Status label="Outlet 3 State: ON" visibility=[CyLights_Light3Status==1]
         Text item=CyLights_Light3Status label="Outlet 3 State: OFF" visibility=[CyLights_Light3Status==0,CyLights_Light3Status==NULL,CyLights_Light3Status==UNDEF]
+        Text label="Light 3 On Time" icon="time" {
+            Setpoint item=CyLights_Light3OnAlarmHour label="Hour" minValue=0 maxValue=23 step=1
+            Setpoint item=CyLights_Light3OnAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
+        }
+        Text label="Light 3 Off Time" icon="time" {
+            Setpoint item=CyLights_Light3OnAlarmHour label="Hour" minValue=0 maxValue=23 step=1
+            Setpoint item=CyLights_Light3OnAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
+        }
 
         Switch item=CyLights_Light4Switch
         Text item=CyLights_Light4Status label="Outlet 4 State: ON" visibility=[CyLights_Light4Status==1]
         Text item=CyLights_Light4Status label="Outlet 4 State: OFF" visibility=[CyLights_Light4Status==0,CyLights_Light4Status==NULL,CyLights_Light4Status==UNDEF]
+        Text label="Light 4 On Time" icon="time" {
+            Setpoint item=CyLights_Light4OnAlarmHour label="Hour" minValue=0 maxValue=23 step=1
+            Setpoint item=CyLights_Light4OnAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
+        }
+        Text label="Light 4 Off Time" icon="time" {
+            Setpoint item=CyLights_Light4OffAlarmHour label="Hour" minValue=0 maxValue=23 step=1
+            Setpoint item=CyLights_Light4OffAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
+        }
 
         Switch item=CyLights_Light5Switch
         Text item=CyLights_Light5Status label="Outlet 5 State: ON" visibility=[CyLights_Light5Status==1]
         Text item=CyLights_Light5Status label="Outlet 5 State: OFF" visibility=[CyLights_Light5Status==0,CyLights_Light5Status==NULL,CyLights_Light5Status==UNDEF]
+        Text label="Light 5 On Time" icon="time" {
+            Setpoint item=CyLights_Light5OnAlarmHour label="Hour" minValue=0 maxValue=23 step=1
+            Setpoint item=CyLights_Light5OnAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
+        }
+        Text label="Light 5 Off Time" icon="time" {
+            Setpoint item=CyLights_Light5OffAlarmHour label="Hour" minValue=0 maxValue=23 step=1
+            Setpoint item=CyLights_Light5OffAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
+        }
 
         Switch item=CyLightsAllSwitch
+        Text label="All Lights On Time" icon="time" {
+            Setpoint item=CyLightsAllLightsOnAlarmHour label="Hour" minValue=0 maxValue=23 step=1
+            Setpoint item=CyLightsAllLightsOnAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
+        }
+        Text label="All Lights Off Time" icon="time" {
+            Setpoint item=CyLightsAllLightsOffAlarmHour label="Hour" minValue=0 maxValue=23 step=1
+            Setpoint item=CyLightsAllLightsOffAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
+        }
     }
 }

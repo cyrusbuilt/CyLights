@@ -1,8 +1,32 @@
+import java.time.ZonedDateTime
+import org.eclipse.xtext.xbase.lib.Functions
+
+val Functions$Function1<ZonedDateTime,ZonedDateTime> getNextAlarm = [ ZonedDateTime s |
+	var newTime = s
+	if (newTime < ZonedDateTime.now) {
+		newTime = newTime.plusDays(1)
+	}
+
+	newTime.withSecond(0)
+]
+
 // NOTE: Commands taken from TelemetryHelper.h
 val String fileName = "cylights.rules"
 val String controlChannel = "cylights/control"
 var String jsonString = ""
 var String cmd = ""
+var Timer light1OnTimer = null
+var Timer light1OffTimer = null
+var Timer light2OnTimer = null
+var Timer light2OffTimer = null
+var Timer light3OnTimer = null
+var Timer light3OffTimer = null
+var Timer light4OnTimer = null
+var Timer light4OffTimer = null
+var Timer light5OnTimer = null
+var Timer light5OffTimer = null
+var Timer allLightsOnTimer = null
+var Timer allLightsOffTimer = null
 val actionsBroker = getActions("mqtt", "mqtt:broker:mosquitto")
 
 rule "Send System Command"
@@ -122,4 +146,628 @@ then
     logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
     actionsBroker.publishMQTT(controlChannel, jsonString)
     jsonString = ""
+end
+
+rule "Light 1 On Time"
+when
+    Item CyLights_Light1OnAlarmHour changed or Item CyLights_Light1OnAlarmMinute changed
+then
+    val settingsOffOrInvalid = (CyLights_Light1OnAlarmHour === NULL
+		|| CyLights_Light1OnAlarmHour.state === NULL
+		|| CyLights_Light1OnAlarmMinute === NULL
+		|| CyLights_Light1OnAlarmMinute.state === NULL)
+    
+    if (settingsOffOrInvalid && light1OnTimer !== null) {
+		logInfo(fileName, "Light 1 On time alarm cancelled.")
+		light1OnTimer.cancel()
+		light1OnTimer = null
+	}
+
+	if (settingsOffOrInvalid) {
+		logInfo(fileName, "Light 1 On time: no alarm set.")
+		return
+	}
+
+    val newHour = (CyLights_Light1OnAlarmHour.state as DecimalType).intValue
+	val newMinute = (CyLights_Light1OnAlarmMinute.state as DecimalType).intValue
+
+	var newZonedDateTime = ZonedDateTime.now
+	newZonedDateTime = newZonedDateTime.withHour(newHour)
+	newZonedDateTime = newZonedDateTime.withMinute(newMinute)
+
+	val newTime = getNextAlarm.apply(newZonedDateTime)
+	logInfo(fileName, "Light 1 On time: " + newTime.toString())
+
+	val epoch = newTime.toInstant().toEpochMilli()
+	if (light1OnTimer !== null) {
+		logInfo(fileName, "Rescheduling Light 1 on time alarm.")
+		light1OnTimer.reschedule(new DateTime(epoch))
+	}
+	else {
+		logInfo(fileName, "New Light 1 on time alarm: " + newTime.toString())
+		light1OnTimer = createTimer(new DateTime(epoch), [ |
+			if (CyLights_Light1Switch.state !== ON) {
+				CyLights_Light1Switch.postUpdate(ON)
+			}
+			
+			val nextTime = ZonedDateTime.now.plusDays(1)
+			val newRescheduleTime = getNextAlarm.apply(nextTime)
+			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			
+			logInfo(fileName, "Light 1 On timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
+			light1OnTimer.reschedule(new DateTime(innerEpoch))
+		])
+	}
+end
+
+rule "Light 1 Off Time"
+when
+    Item CyLights_Light1OffnAlarmHour changed or Item CyLights_Light1OffAlarmMinute changed
+then
+    val settingsOffOrInvalid = (CyLights_Light1OffAlarmHour === NULL
+		|| CyLights_Light1OffnAlarmHour.state === NULL
+		|| CyLights_Light1OffAlarmMinute === NULL
+		|| CyLights_Light1OffAlarmMinute.state === NULL)
+    
+    if (settingsOffOrInvalid && light1OffTimer !== null) {
+		logInfo(fileName, "Light 1 Off time alarm cancelled.")
+		light1OffTimer.cancel()
+		light1OffTimer = null
+	}
+
+	if (settingsOffOrInvalid) {
+		logInfo(fileName, "Light 1 Off time: no alarm set.")
+		return
+	}
+
+    val newHour = (CyLights_Light1OffAlarmHour.state as DecimalType).intValue
+	val newMinute = (CyLights_Light1OffAlarmMinute.state as DecimalType).intValue
+
+	var newZonedDateTime = ZonedDateTime.now
+	newZonedDateTime = newZonedDateTime.withHour(newHour)
+	newZonedDateTime = newZonedDateTime.withMinute(newMinute)
+
+	val newTime = getNextAlarm.apply(newZonedDateTime)
+	logInfo(fileName, "Light 1 Off time: " + newTime.toString())
+
+	val epoch = newTime.toInstant().toEpochMilli()
+	if (light1OffTimer !== null) {
+		logInfo(fileName, "Rescheduling Light 1 off time alarm.")
+		light1OffTimer.reschedule(new DateTime(epoch))
+	}
+	else {
+		logInfo(fileName, "New Light 1 off time alarm: " + newTime.toString())
+		light1OffTimer = createTimer(new DateTime(epoch), [ |
+			if (CyLights_Light1Switch.state !== OFF) {
+				CyLights_Light1Switch.postUpdate(OFF)
+			}
+			
+			val nextTime = ZonedDateTime.now.plusDays(1)
+			val newRescheduleTime = getNextAlarm.apply(nextTime)
+			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			
+			logInfo(fileName, "Light 1 Off timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
+			light1OffTimer.reschedule(new DateTime(innerEpoch))
+		])
+	}
+end
+
+rule "Light 2 On Time"
+when
+    Item CyLights_Light2OnAlarmHour changed or Item CyLights_Light2OnAlarmMinute changed
+then
+    val settingsOffOrInvalid = (CyLights_Light2OnAlarmHour === NULL
+		|| CyLights_Light2OnAlarmHour.state === NULL
+		|| CyLights_Light2OnAlarmMinute === NULL
+		|| CyLights_Light2OnAlarmMinute.state === NULL)
+    
+    if (settingsOffOrInvalid && light2OnTimer !== null) {
+		logInfo(fileName, "Light 2 On time alarm cancelled.")
+		light2OnTimer.cancel()
+		light2OnTimer = null
+	}
+
+	if (settingsOffOrInvalid) {
+		logInfo(fileName, "Light 2 On time: no alarm set.")
+		return
+	}
+
+    val newHour = (CyLights_Light2OnAlarmHour.state as DecimalType).intValue
+	val newMinute = (CyLights_Light2OnAlarmMinute.state as DecimalType).intValue
+
+	var newZonedDateTime = ZonedDateTime.now
+	newZonedDateTime = newZonedDateTime.withHour(newHour)
+	newZonedDateTime = newZonedDateTime.withMinute(newMinute)
+
+	val newTime = getNextAlarm.apply(newZonedDateTime)
+	logInfo(fileName, "Light 2 On time: " + newTime.toString())
+
+	val epoch = newTime.toInstant().toEpochMilli()
+	if (light2OnTimer !== null) {
+		logInfo(fileName, "Rescheduling Light 2 on time alarm.")
+		light2OnTimer.reschedule(new DateTime(epoch))
+	}
+	else {
+		logInfo(fileName, "New Light 2 on time alarm: " + newTime.toString())
+		light2OnTimer = createTimer(new DateTime(epoch), [ |
+			if (CyLights_Light2Switch.state !== ON) {
+				CyLights_Light2Switch.postUpdate(ON)
+			}
+			
+			val nextTime = ZonedDateTime.now.plusDays(1)
+			val newRescheduleTime = getNextAlarm.apply(nextTime)
+			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			
+			logInfo(fileName, "Light 2 On timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
+			light2OnTimer.reschedule(new DateTime(innerEpoch))
+		])
+	}
+end
+
+rule "Light 2 Off Time"
+when
+    Item CyLights_Light2OffnAlarmHour changed or Item CyLights_Light2OffAlarmMinute changed
+then
+    val settingsOffOrInvalid = (CyLights_Light2OffAlarmHour === NULL
+		|| CyLights_Light2OffnAlarmHour.state === NULL
+		|| CyLights_Light2OffAlarmMinute === NULL
+		|| CyLights_Light2OffAlarmMinute.state === NULL)
+    
+    if (settingsOffOrInvalid && light2OffTimer !== null) {
+		logInfo(fileName, "Light 2 Off time alarm cancelled.")
+		light2OffTimer.cancel()
+		light2OffTimer = null
+	}
+
+	if (settingsOffOrInvalid) {
+		logInfo(fileName, "Light 2 Off time: no alarm set.")
+		return
+	}
+
+    val newHour = (CyLights_Light2OffAlarmHour.state as DecimalType).intValue
+	val newMinute = (CyLights_Light2OffAlarmMinute.state as DecimalType).intValue
+
+	var newZonedDateTime = ZonedDateTime.now
+	newZonedDateTime = newZonedDateTime.withHour(newHour)
+	newZonedDateTime = newZonedDateTime.withMinute(newMinute)
+
+	val newTime = getNextAlarm.apply(newZonedDateTime)
+	logInfo(fileName, "Light 2 Off time: " + newTime.toString())
+
+	val epoch = newTime.toInstant().toEpochMilli()
+	if (light2OffTimer !== null) {
+		logInfo(fileName, "Rescheduling Light 2 off time alarm.")
+		light2OffTimer.reschedule(new DateTime(epoch))
+	}
+	else {
+		logInfo(fileName, "New Light 2 off time alarm: " + newTime.toString())
+		light2OffTimer = createTimer(new DateTime(epoch), [ |
+			if (CyLights_Light2Switch.state !== OFF) {
+				CyLights_Light2Switch.postUpdate(OFF)
+			}
+			
+			val nextTime = ZonedDateTime.now.plusDays(1)
+			val newRescheduleTime = getNextAlarm.apply(nextTime)
+			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			
+			logInfo(fileName, "Light 2 Off timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
+			light2OffTimer.reschedule(new DateTime(innerEpoch))
+		])
+	}
+end
+
+rule "Light 3 On Time"
+when
+    Item CyLights_Light3OnAlarmHour changed or Item CyLights_Light3OnAlarmMinute changed
+then
+    val settingsOffOrInvalid = (CyLights_Light3OnAlarmHour === NULL
+		|| CyLights_Light3OnAlarmHour.state === NULL
+		|| CyLights_Light3OnAlarmMinute === NULL
+		|| CyLights_Light3OnAlarmMinute.state === NULL)
+    
+    if (settingsOffOrInvalid && light3OnTimer !== null) {
+		logInfo(fileName, "Light 3 On time alarm cancelled.")
+		light3OnTimer.cancel()
+		light3OnTimer = null
+	}
+
+	if (settingsOffOrInvalid) {
+		logInfo(fileName, "Light 3 On time: no alarm set.")
+		return
+	}
+
+    val newHour = (CyLights_Light3OnAlarmHour.state as DecimalType).intValue
+	val newMinute = (CyLights_Light3OnAlarmMinute.state as DecimalType).intValue
+
+	var newZonedDateTime = ZonedDateTime.now
+	newZonedDateTime = newZonedDateTime.withHour(newHour)
+	newZonedDateTime = newZonedDateTime.withMinute(newMinute)
+
+	val newTime = getNextAlarm.apply(newZonedDateTime)
+	logInfo(fileName, "Light 3 On time: " + newTime.toString())
+
+	val epoch = newTime.toInstant().toEpochMilli()
+	if (light3OnTimer !== null) {
+		logInfo(fileName, "Rescheduling Light 3 on time alarm.")
+		light3OnTimer.reschedule(new DateTime(epoch))
+	}
+	else {
+		logInfo(fileName, "New Light 3 on time alarm: " + newTime.toString())
+		light3OnTimer = createTimer(new DateTime(epoch), [ |
+			if (CyLights_Light3Switch.state !== ON) {
+				CyLights_Light3Switch.postUpdate(ON)
+			}
+			
+			val nextTime = ZonedDateTime.now.plusDays(1)
+			val newRescheduleTime = getNextAlarm.apply(nextTime)
+			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			
+			logInfo(fileName, "Light 3 On timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
+			light3OnTimer.reschedule(new DateTime(innerEpoch))
+		])
+	}
+end
+
+rule "Light 3 Off Time"
+when
+    Item CyLights_Light3OffnAlarmHour changed or Item CyLights_Light3OffAlarmMinute changed
+then
+    val settingsOffOrInvalid = (CyLights_Light3OffAlarmHour === NULL
+		|| CyLights_Light3OffnAlarmHour.state === NULL
+		|| CyLights_Light3OffAlarmMinute === NULL
+		|| CyLights_Light3OffAlarmMinute.state === NULL)
+    
+    if (settingsOffOrInvalid && light3OffTimer !== null) {
+		logInfo(fileName, "Light 3 Off time alarm cancelled.")
+		light3OffTimer.cancel()
+		light3OffTimer = null
+	}
+
+	if (settingsOffOrInvalid) {
+		logInfo(fileName, "Light 3 Off time: no alarm set.")
+		return
+	}
+
+    val newHour = (CyLights_Light3OffAlarmHour.state as DecimalType).intValue
+	val newMinute = (CyLights_Light3OffAlarmMinute.state as DecimalType).intValue
+
+	var newZonedDateTime = ZonedDateTime.now
+	newZonedDateTime = newZonedDateTime.withHour(newHour)
+	newZonedDateTime = newZonedDateTime.withMinute(newMinute)
+
+	val newTime = getNextAlarm.apply(newZonedDateTime)
+	logInfo(fileName, "Light 3 Off time: " + newTime.toString())
+
+	val epoch = newTime.toInstant().toEpochMilli()
+	if (light3OffTimer !== null) {
+		logInfo(fileName, "Rescheduling Light 3 off time alarm.")
+		light3OffTimer.reschedule(new DateTime(epoch))
+	}
+	else {
+		logInfo(fileName, "New Light 3 off time alarm: " + newTime.toString())
+		light3OffTimer = createTimer(new DateTime(epoch), [ |
+			if (CyLights_Light3Switch.state !== OFF) {
+				CyLights_Light3Switch.postUpdate(OFF)
+			}
+			
+			val nextTime = ZonedDateTime.now.plusDays(1)
+			val newRescheduleTime = getNextAlarm.apply(nextTime)
+			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			
+			logInfo(fileName, "Light 3 Off timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
+			light3OffTimer.reschedule(new DateTime(innerEpoch))
+		])
+	}
+end
+
+rule "Light 4 On Time"
+when
+    Item CyLights_Light4OnAlarmHour changed or Item CyLights_Light4OnAlarmMinute changed
+then
+    val settingsOffOrInvalid = (CyLights_Light4OnAlarmHour === NULL
+		|| CyLights_Light4OnAlarmHour.state === NULL
+		|| CyLights_Light4OnAlarmMinute === NULL
+		|| CyLights_Light4OnAlarmMinute.state === NULL)
+    
+    if (settingsOffOrInvalid && light4OnTimer !== null) {
+		logInfo(fileName, "Light 4 On time alarm cancelled.")
+		light4OnTimer.cancel()
+		light4OnTimer = null
+	}
+
+	if (settingsOffOrInvalid) {
+		logInfo(fileName, "Light 4 On time: no alarm set.")
+		return
+	}
+
+    val newHour = (CyLights_Light4OnAlarmHour.state as DecimalType).intValue
+	val newMinute = (CyLights_Light4OnAlarmMinute.state as DecimalType).intValue
+
+	var newZonedDateTime = ZonedDateTime.now
+	newZonedDateTime = newZonedDateTime.withHour(newHour)
+	newZonedDateTime = newZonedDateTime.withMinute(newMinute)
+
+	val newTime = getNextAlarm.apply(newZonedDateTime)
+	logInfo(fileName, "Light 4 On time: " + newTime.toString())
+
+	val epoch = newTime.toInstant().toEpochMilli()
+	if (light4OnTimer !== null) {
+		logInfo(fileName, "Rescheduling Light 4 on time alarm.")
+		light4OnTimer.reschedule(new DateTime(epoch))
+	}
+	else {
+		logInfo(fileName, "New Light 4 on time alarm: " + newTime.toString())
+		light4OnTimer = createTimer(new DateTime(epoch), [ |
+			if (CyLights_Light4Switch.state !== ON) {
+				CyLights_Light4Switch.postUpdate(ON)
+			}
+			
+			val nextTime = ZonedDateTime.now.plusDays(1)
+			val newRescheduleTime = getNextAlarm.apply(nextTime)
+			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			
+			logInfo(fileName, "Light 4 On timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
+			light4OnTimer.reschedule(new DateTime(innerEpoch))
+		])
+	}
+end
+
+rule "Light 4 Off Time"
+when
+    Item CyLights_Light4OffnAlarmHour changed or Item CyLights_Light4OffAlarmMinute changed
+then
+    val settingsOffOrInvalid = (CyLights_Light4OffAlarmHour === NULL
+		|| CyLights_Light4OffnAlarmHour.state === NULL
+		|| CyLights_Light4OffAlarmMinute === NULL
+		|| CyLights_Light4OffAlarmMinute.state === NULL)
+    
+    if (settingsOffOrInvalid && light4OffTimer !== null) {
+		logInfo(fileName, "Light 4 Off time alarm cancelled.")
+		light4OffTimer.cancel()
+		light4OffTimer = null
+	}
+
+	if (settingsOffOrInvalid) {
+		logInfo(fileName, "Light 4 Off time: no alarm set.")
+		return
+	}
+
+    val newHour = (CyLights_Light4OffAlarmHour.state as DecimalType).intValue
+	val newMinute = (CyLights_Light4OffAlarmMinute.state as DecimalType).intValue
+
+	var newZonedDateTime = ZonedDateTime.now
+	newZonedDateTime = newZonedDateTime.withHour(newHour)
+	newZonedDateTime = newZonedDateTime.withMinute(newMinute)
+
+	val newTime = getNextAlarm.apply(newZonedDateTime)
+	logInfo(fileName, "Light 4 Off time: " + newTime.toString())
+
+	val epoch = newTime.toInstant().toEpochMilli()
+	if (light4OffTimer !== null) {
+		logInfo(fileName, "Rescheduling Light 4 off time alarm.")
+		light4OffTimer.reschedule(new DateTime(epoch))
+	}
+	else {
+		logInfo(fileName, "New Light 4 off time alarm: " + newTime.toString())
+		light4OffTimer = createTimer(new DateTime(epoch), [ |
+			if (CyLights_Light4Switch.state !== OFF) {
+				CyLights_Light4Switch.postUpdate(OFF)
+			}
+			
+			val nextTime = ZonedDateTime.now.plusDays(1)
+			val newRescheduleTime = getNextAlarm.apply(nextTime)
+			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			
+			logInfo(fileName, "Light 4 Off timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
+			light4OffTimer.reschedule(new DateTime(innerEpoch))
+		])
+	}
+end
+
+rule "Light 5 On Time"
+when
+    Item CyLights_Light5OnAlarmHour changed or Item CyLights_Light5OnAlarmMinute changed
+then
+    val settingsOffOrInvalid = (CyLights_Light5OnAlarmHour === NULL
+		|| CyLights_Light5OnAlarmHour.state === NULL
+		|| CyLights_Light5OnAlarmMinute === NULL
+		|| CyLights_Light5OnAlarmMinute.state === NULL)
+    
+    if (settingsOffOrInvalid && light5OnTimer !== null) {
+		logInfo(fileName, "Light 5 On time alarm cancelled.")
+		light5OnTimer.cancel()
+		light5OnTimer = null
+	}
+
+	if (settingsOffOrInvalid) {
+		logInfo(fileName, "Light 5 On time: no alarm set.")
+		return
+	}
+
+    val newHour = (CyLights_Light5OnAlarmHour.state as DecimalType).intValue
+	val newMinute = (CyLights_Light5OnAlarmMinute.state as DecimalType).intValue
+
+	var newZonedDateTime = ZonedDateTime.now
+	newZonedDateTime = newZonedDateTime.withHour(newHour)
+	newZonedDateTime = newZonedDateTime.withMinute(newMinute)
+
+	val newTime = getNextAlarm.apply(newZonedDateTime)
+	logInfo(fileName, "Light 5 On time: " + newTime.toString())
+
+	val epoch = newTime.toInstant().toEpochMilli()
+	if (light5OnTimer !== null) {
+		logInfo(fileName, "Rescheduling Light 5 on time alarm.")
+		light5OnTimer.reschedule(new DateTime(epoch))
+	}
+	else {
+		logInfo(fileName, "New Light 5 on time alarm: " + newTime.toString())
+		light5OnTimer = createTimer(new DateTime(epoch), [ |
+			if (CyLights_Light5Switch.state !== ON) {
+				CyLights_Light5Switch.postUpdate(ON)
+			}
+			
+			val nextTime = ZonedDateTime.now.plusDays(1)
+			val newRescheduleTime = getNextAlarm.apply(nextTime)
+			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			
+			logInfo(fileName, "Light 5 On timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
+			light5OnTimer.reschedule(new DateTime(innerEpoch))
+		])
+	}
+end
+
+rule "Light 5 Off Time"
+when
+    Item CyLights_Light5OffnAlarmHour changed or Item CyLights_Light5OffAlarmMinute changed
+then
+    val settingsOffOrInvalid = (CyLights_Light5OffAlarmHour === NULL
+		|| CyLights_Light5OffnAlarmHour.state === NULL
+		|| CyLights_Light5OffAlarmMinute === NULL
+		|| CyLights_Light5OffAlarmMinute.state === NULL)
+    
+    if (settingsOffOrInvalid && light5OffTimer !== null) {
+		logInfo(fileName, "Light 5 Off time alarm cancelled.")
+		light5OffTimer.cancel()
+		light5OffTimer = null
+	}
+
+	if (settingsOffOrInvalid) {
+		logInfo(fileName, "Light 5 Off time: no alarm set.")
+		return
+	}
+
+    val newHour = (CyLights_Light5OffAlarmHour.state as DecimalType).intValue
+	val newMinute = (CyLights_Light5OffAlarmMinute.state as DecimalType).intValue
+
+	var newZonedDateTime = ZonedDateTime.now
+	newZonedDateTime = newZonedDateTime.withHour(newHour)
+	newZonedDateTime = newZonedDateTime.withMinute(newMinute)
+
+	val newTime = getNextAlarm.apply(newZonedDateTime)
+	logInfo(fileName, "Light 5 Off time: " + newTime.toString())
+
+	val epoch = newTime.toInstant().toEpochMilli()
+	if (light5OffTimer !== null) {
+		logInfo(fileName, "Rescheduling Light 5 off time alarm.")
+		light5OffTimer.reschedule(new DateTime(epoch))
+	}
+	else {
+		logInfo(fileName, "New Light 5 off time alarm: " + newTime.toString())
+		light5OffTimer = createTimer(new DateTime(epoch), [ |
+			if (CyLights_Light5Switch.state !== OFF) {
+				CyLights_Light5Switch.postUpdate(OFF)
+			}
+			
+			val nextTime = ZonedDateTime.now.plusDays(1)
+			val newRescheduleTime = getNextAlarm.apply(nextTime)
+			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			
+			logInfo(fileName, "Light 5 Off timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
+			light5OffTimer.reschedule(new DateTime(innerEpoch))
+		])
+	}
+end
+
+rule "All Lights On Time"
+when
+    Item CyLightsAllLightsOnAlarmHour changed or Item CyLightsAllLightsOnAlarmMinute changed
+then
+    val settingsOffOrInvalid = (CyLightsAllLightsOnAlarmHour === NULL
+		|| CyLightsAllLightsOnAlarmHour.state === NULL
+		|| CyLightsAllLightsOnAlarmMinute === NULL
+		|| CyLightsAllLightsOnAlarmMinute.state === NULL)
+    
+    if (settingsOffOrInvalid && allLightsOnTimer !== null) {
+		logInfo(fileName, "All Lights On time alarm cancelled.")
+		allLightsOnTimer.cancel()
+		allLightsOnTimer = null
+	}
+
+	if (settingsOffOrInvalid) {
+		logInfo(fileName, "All Lights On time: no alarm set.")
+		return
+	}
+
+    val newHour = (CyLightsAllLightsOnAlarmHour.state as DecimalType).intValue
+	val newMinute = (CyLightsAllLightsOnAlarmMinute.state as DecimalType).intValue
+
+	var newZonedDateTime = ZonedDateTime.now
+	newZonedDateTime = newZonedDateTime.withHour(newHour)
+	newZonedDateTime = newZonedDateTime.withMinute(newMinute)
+
+	val newTime = getNextAlarm.apply(newZonedDateTime)
+	logInfo(fileName, "All Lights On time: " + newTime.toString())
+
+	val epoch = newTime.toInstant().toEpochMilli()
+	if (allLightsOnTimer !== null) {
+		logInfo(fileName, "Rescheduling All Lights on time alarm.")
+		allLightsOnTimer.reschedule(new DateTime(epoch))
+	}
+	else {
+		logInfo(fileName, "New All Lights on time alarm: " + newTime.toString())
+		allLightsOnTimer = createTimer(new DateTime(epoch), [ |
+			if (CyLightsAllSwitch.state !== ON) {
+				CyLightsAllSwitch.postUpdate(ON)
+			}
+			
+			val nextTime = ZonedDateTime.now.plusDays(1)
+			val newRescheduleTime = getNextAlarm.apply(nextTime)
+			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			
+			logInfo(fileName, "All Lights On timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
+			allLightsOnTimer.reschedule(new DateTime(innerEpoch))
+		])
+	}
+end
+
+rule "All Lights Off Time"
+when
+    Item CyLightsAllLightsOffAlarmHour changed or Item CyLightsAllLightsOffAlarmMinute changed
+then
+    val settingsOffOrInvalid = (CyLightsAllLightsOffAlarmHour === NULL
+		|| CyLightsAllLightsOffAlarmHour.state === NULL
+		|| CyLightsAllLightsOffAlarmMinute === NULL
+		|| CyLightsAllLightsOffAlarmMinute.state === NULL)
+    
+    if (settingsOffOrInvalid && allLightsOffTimer !== null) {
+		logInfo(fileName, "All Lights Off time alarm cancelled.")
+		allLightsOffTimer.cancel()
+		allLightsOffTimer = null
+	}
+
+	if (settingsOffOrInvalid) {
+		logInfo(fileName, "All Lights Off time: no alarm set.")
+		return
+	}
+
+    val newHour = (CyLightsAllLightsOffAlarmHour.state as DecimalType).intValue
+	val newMinute = (CyLightsAllLightsOffAlarmMinute.state as DecimalType).intValue
+
+	var newZonedDateTime = ZonedDateTime.now
+	newZonedDateTime = newZonedDateTime.withHour(newHour)
+	newZonedDateTime = newZonedDateTime.withMinute(newMinute)
+
+	val newTime = getNextAlarm.apply(newZonedDateTime)
+	logInfo(fileName, "All Lights Off time: " + newTime.toString())
+
+	val epoch = newTime.toInstant().toEpochMilli()
+	if (allLightsOffTimer !== null) {
+		logInfo(fileName, "Rescheduling All Lights off time alarm.")
+		allLightsOffTimer.reschedule(new DateTime(epoch))
+	}
+	else {
+		logInfo(fileName, "New All Lights off time alarm: " + newTime.toString())
+		allLightsOffTimer = createTimer(new DateTime(epoch), [ |
+			if (CyLightsAllSwitch.state !== OFF) {
+				CyLightsAllSwitch.postUpdate(OFF)
+			}
+			
+			val nextTime = ZonedDateTime.now.plusDays(1)
+			val newRescheduleTime = getNextAlarm.apply(nextTime)
+			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			
+			logInfo(fileName, "All Lights Off timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
+			allLightsOffTimer.reschedule(new DateTime(innerEpoch))
+		])
+	}
 end

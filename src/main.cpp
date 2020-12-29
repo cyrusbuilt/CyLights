@@ -67,6 +67,7 @@ PubSubClient mqttClient(wifiClient);
 LED actLED(PIN_ACT_LED, NULL);
 Task tCheckWifi(CHECK_WIFI_INTERVAL, TASK_FOREVER, &onCheckWiFi);
 Task tCheckMqtt(CHECK_MQTT_INTERVAL, TASK_FOREVER, &onCheckMqtt);
+Task tSyncClock(CLOCK_SYNC_INTERVAL, TASK_FOREVER, &onSyncClock);
 Scheduler taskMan;
 Adafruit_MCP23017 bus;
 LightController controller(&bus);
@@ -802,9 +803,18 @@ void initMQTT() {
  * Attempt to connect to the configured WiFi network. This will break any existing connection first.
  */
 void connectWifi() {
+    if (config.hostname) {
+        WiFi.hostname(config.hostname);
+    }
+
+    #ifdef DEBUG
     Serial.println(F("DEBUG: Setting mode..."));
+    #endif
     WiFi.mode(WIFI_STA);
+
+    #ifdef DEBUG
     Serial.println(F("DEBUG: Disconnect and clear to prevent auto connect..."));
+    #endif
     WiFi.persistent(false);
     WiFi.disconnect(true);
     ESPCrashMonitor.defer();
@@ -819,9 +829,14 @@ void connectWifi() {
         WiFi.config(config.ip, config.gw, config.sm, config.dns);
     }
 
+    #ifdef DEBUG
     Serial.println(F("DEBUG: Beginning connection..."));
+    #endif
     WiFi.begin(config.ssid, config.password);
+
+    #ifdef DEBUG
     Serial.println(F("DEBUG: Waiting for connection..."));
+    #endif
     
     const int maxTries = 20;
     int currentTry = 0;
@@ -947,9 +962,11 @@ void initTaskManager() {
     taskMan.init();
     taskMan.addTask(tCheckWifi);
     taskMan.addTask(tCheckMqtt);
+    taskMan.addTask(tSyncClock);
     
     tCheckWifi.enableDelayed(30000);
     tCheckMqtt.enableDelayed(1000);
+    tSyncClock.enable();
     Serial.println(F("DONE"));
 }
 
@@ -982,6 +999,10 @@ void initCrashMonitor() {
 
 void handleNewHostname(const char* newHostname) {
     config.hostname = newHostname;
+    if (config.hostname) {
+        WiFi.hostname(config.hostname);
+    }
+
     initMDNS();
 }
 
