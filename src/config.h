@@ -12,8 +12,8 @@
 #define CLOCK_TIMEZONE -4                       // The timezone this device is located in. (For example, EST when observing DST = GMT-4, when not = GMT-5)
 #define SERIAL_BAUD 115200                      // The BAUD rate (speed) of the serial port (console).
 #define CONFIG_FILE_PATH "/config.json"         // The path to the config file in SPIFFS.
-#define CHECK_WIFI_INTERVAL 30000               // How often to check WiFi status (milliseconds).
-#define CHECK_MQTT_INTERVAL 35000               // How often to check connectivity to the MQTT broker.
+#define CHECK_WIFI_INTERVAL 60000               // How often to check WiFi status (milliseconds).
+#define CHECK_MQTT_INTERVAL 120000               // How often to check connectivity to the MQTT broker.
 #define CLOCK_SYNC_INTERVAL 3600000             // How often to sync the local clock with NTP (milliseconds).
 #define MQTT_TOPIC_STATUS "cylights/status"     // The MQTT channel to publish status messages to.
 #define MQTT_TOPIC_CONTROL "cylights/control"   // The MQTT channel to subscribe to for control messages.

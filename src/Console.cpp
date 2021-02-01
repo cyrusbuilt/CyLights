@@ -67,6 +67,10 @@ void ConsoleClass::onAllLightsOff(void (*allLightsOffHandler)()) {
     this->allLightsOffHandler = allLightsOffHandler;
 }
 
+void ConsoleClass::onBusReset(void (*busResetHandler)()) {
+    this->busResetHandler = busResetHandler;
+}
+
 void ConsoleClass::setMqttConfig(String broker, int port, String username, String password, String conChan, String statChan) {
     this->_mqttBroker = broker;
     this->_mqttPort = port;
@@ -233,6 +237,7 @@ void ConsoleClass::displayMenu() {
     Serial.println(F("=============================="));
     Serial.println(F("= Command menu:              ="));
     Serial.println(F("=                            ="));
+    Serial.println(F("= b: Reset Comm Bus          ="));
     Serial.println(F("= h: All Lights On           ="));
     Serial.println(F("= i: All Lights Off          ="));
     Serial.println(F("= r: Reboot                  ="));
@@ -248,7 +253,7 @@ void ConsoleClass::displayMenu() {
     Serial.println(F("=                            ="));
     Serial.println(F("=============================="));
     Serial.println();
-    Serial.println(F("Enter command choice (r/c/m/s/n/w/e/g/f/z): "));
+    Serial.println(F("Enter command choice (b/h/i/r/c/m/s/n/w/e/g/f/z): "));
     this->waitForUserInput();
 }
 
@@ -261,6 +266,14 @@ void ConsoleClass::checkCommand() {
     String str = "";
     char incomingByte = Serial.read();
     switch (incomingByte) {
+        case 'b':
+            if (this->busResetHandler != NULL) {
+                this->busResetHandler();
+            }
+
+            Serial.println();
+            this->enterCommandInterpreter();
+            break;
         case 'h':
             if (this->allLightsOnHandler != NULL) {
                 this->allLightsOnHandler();

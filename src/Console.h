@@ -81,6 +81,7 @@ public:
     void onFactoryRestore(void (*factoryRestoreHandler)());
     void onAllLightsOn(void (*allLightsOnHandler)());
     void onAllLightsOff(void (*allLightsOffHandler)());
+    void onBusReset(void (*busResetHandler)());
     void checkInterrupt();
 
 private:
@@ -105,6 +106,7 @@ private:
     void (*factoryRestoreHandler)();
     void (*allLightsOnHandler)();
     void (*allLightsOffHandler)();
+    void (*busResetHandler)();
     
     String _hostname;
     String _mqttBroker;

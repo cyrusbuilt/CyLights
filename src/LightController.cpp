@@ -1,4 +1,7 @@
 #include "LightController.h"
+#ifndef DEBUG
+#define DEBUG
+#endif
 
 LightController::LightController(Adafruit_MCP23017 *busController) {
 	this->_busController = busController;
@@ -17,7 +20,7 @@ uint8_t LightController::getLightPinAddress(LightSelect light, LightState state)
 					result = LIGHT_1_ON_RELAY;
 					break;
 				case LightState::OFF:
-					result = LIGHT_2_OFF_RELAY;
+					result = LIGHT_1_OFF_RELAY;
 					break;
 				default:
 					break;
@@ -58,6 +61,7 @@ uint8_t LightController::getLightPinAddress(LightSelect light, LightState state)
 				default:
 					break;
 			}
+			break;
 		case LightSelect::FIVE:
 			switch (state) {
 				case LightState::ON:
@@ -112,7 +116,7 @@ void LightController::init() {
 		this->_busController->digitalWrite(relayOnAddress, LOW);
 
 		uint8_t relayOffAddress = this->getLightPinAddress((LightSelect)i, LightState::OFF);
-		this->_busController->pinMode(relayOffAddress, LOW);
+		this->_busController->pinMode(relayOffAddress, OUTPUT);
 		this->_busController->digitalWrite(relayOffAddress, LOW);
 
 		uint8_t ledAddress = this->getLedAddress((LightSelect)i);
@@ -123,18 +127,49 @@ void LightController::init() {
 
 LightState LightController::getState(LightSelect light) {
 	uint8_t ledAddress = this->getLedAddress(light);
-	return (LightState)this->_busController->digitalRead(ledAddress);
+	LightState state = (LightState)this->_busController->digitalRead(ledAddress);
+	#ifdef DEBUG
+	Serial.println(F("DEBUG: Getting light state."));
+	Serial.print(F("DEBUG: LED address: "));
+	Serial.println(ledAddress);
+	Serial.print(F("DEBUG: LED state: "));
+	Serial.println(state == LightState::ON ? F("ON") : F("OFF"));
+	#endif
+	return state;
 }
 
 void LightController::setState(LightSelect light, LightState state) {
+	#ifdef DEBUG
+	Serial.print(F("DEBUG: Requested light: "));
+	Serial.println((uint8_t)light);
+	Serial.print(F("DEBUG: Requested state: "));
+	Serial.println((uint8_t)state);
+	#endif
 	if (this->getState(light) != state) {
+		#ifdef DEBUG
+		Serial.println(F("DEBUG: State changing."));
+		#endif
 		uint8_t lightPinAddress = this->getLightPinAddress(light, state);
-		this->_busController->digitalWrite(lightPinAddress, (uint8_t)state);
+		#ifdef DEBUG
+		Serial.print(F("DEBUG: Light pin address: "));
+		Serial.println(lightPinAddress);
+		Serial.println(F("DEBUG: Writing pin state: HIGH"));
+		#endif
+		this->_busController->digitalWrite(lightPinAddress, HIGH);
 
 		uint8_t ledAddress = this->getLedAddress(light);
-		this->_busController->digitalWrite(ledAddress, HIGH);
+		#ifdef DEBUG
+		Serial.print(F("DEBUG: LED address: "));
+		Serial.println(ledAddress);
+		Serial.print(F("DEBUG: Turning LED "));
+		Serial.println(state == LightState::ON ? "ON" : "OFF");
+		#endif
+		this->_busController->digitalWrite(ledAddress, state == LightState::ON ? HIGH : LOW);
 		
-		delay(1000);
+		delay(1500);
+		#ifdef DEBUG
+		Serial.println(F("DEBUG: Writing pin state: LOW"));
+		#endif
 		this->_busController->digitalWrite(lightPinAddress, LOW);
 	}
 }

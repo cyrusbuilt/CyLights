@@ -1,15 +1,17 @@
 {
     "hostname": "CYLIGHTS",
     "useDHCP": true,
-    "ip": "your_ip_here",
-    "gateway": "your_gateway_here",
-    "subnetMask": "your_subnet_mask_here",
-    "wifiSSID": "your_ssid_here",
-    "wifiPassword": "your_password_here",
-    "mqttBroker": "your_mqtt_broker_here",
-    "mqttPort": 1883,
+    "ip": "192.168.0.220",
+    "gateway": "192.168.0.1",
+    "subnetMask": "255.255.255.0",
+    "wifiSSID": "your_wifi_ssid_here",
+    "wifiPassword": "your_wifi_password_here",
+    "mqttBroker": "your_mqtt_broker",
+    "mqttPort": 8883,
     "mqttControlChannel": "cylights/control",
     "mqttStatusChannel": "cylights/status",
+    "mqttUsername": "your_mqtt_user_name",
+    "mqttPassword": "your_mqtt_password",
     "otaPort": 8266,
-    "otaPassword": "your_ota_password_here"
+    "otaPassword": "your_ota_password"
 }

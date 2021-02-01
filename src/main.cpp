@@ -23,6 +23,7 @@
 #include <WiFiClient.h>
 #include <Wire.h>
 #include <time.h>
+#include "config.h"
 #include "Adafruit_MCP23017.h"
 #include "TelemetryHelper.h"
 #include "LED.h"
@@ -34,21 +35,15 @@
 #include "ArduinoJson.h"
 #include "LightController.h"
 #include "Console.h"
-#include "config.h"
 
 #define VERSION "1.2"
 
 #define PRIMARY_I2C_ADDRESS 0
 #define I2C_ADDRESS_OFFSET 32
 
-// Workaround to allow an MQTT packet size greater than the default of 128.
-#ifdef MQTT_MAX_PACKET_SIZE
-#undef MQTT_MAX_PACKET_SIZE
-#endif
-#define MQTT_MAX_PACKET_SIZE 200
-
 // Pin definitions
 #define PIN_ACT_LED 14
+#define PIN_BUS_RESET 16
 
 // Forward declarations
 void onCheckWiFi();
@@ -106,19 +101,18 @@ void onSyncClock() {
 void publishSystemState() {
     if (mqttClient.connected()) {
         actLED.on();
+        uint16_t freeMem = ESP.getMaxFreeBlockSize() - 512;
 
-        DynamicJsonDocument doc(200);
+        DynamicJsonDocument doc(freeMem);
         doc["client_id"] = config.hostname;
         doc["systemState"] = (uint8_t)sysState;
         doc["firmwareVersion"] = VERSION;
-
-        JsonObject lightObj;
-        JsonArray lightStates = doc.createNestedArray("lights");
-        for (uint8_t i = 1; i <= 5; i++) {
-            lightObj = lightStates.createNestedObject();
-            lightObj["id"] = i;
-            lightObj["state"] = (uint8_t)controller.getState((LightSelect)i);
-        }
+        doc["light1State"] = (uint8_t)controller.getState((LightSelect)1);
+        doc["light2State"] = (uint8_t)controller.getState((LightSelect)2);
+        doc["light3State"] = (uint8_t)controller.getState((LightSelect)3);
+        doc["light4State"] = (uint8_t)controller.getState((LightSelect)4);
+        doc["light5State"] = (uint8_t)controller.getState((LightSelect)5);
+        doc.shrinkToFit();
 
         String jsonStr;
         size_t len = serializeJson(doc, jsonStr);
@@ -133,16 +127,35 @@ void publishSystemState() {
     }
 }
 
+void HCF() {
+    Serial.println(F("ERROR: ******* SYSTEM HALTED *******"));
+    Serial.flush();
+    sysState = SystemState::DISABLED;
+    while (true) {
+        ESPCrashMonitor.iAmAlive();
+        delay(10);
+    }
+}
+
+void resetCommBus() {
+    Serial.print(F("INFO: Resetting comm bus... "));
+    digitalWrite(PIN_BUS_RESET, LOW);
+    delay(500);
+    digitalWrite(PIN_BUS_RESET, HIGH);
+    Serial.println(F("DONE"));
+}
+
 /**
  * Disables the system and publishes the system's state to statusChannel,
  * then reboots the MCU.
  */
 void reboot() {
-    Serial.println(F("INFO: Rebooting... "));
+    Serial.println(F("INFO: Rebooting..."));
     Serial.flush();
     delay(1000);
     sysState = SystemState::DISABLED;
     publishSystemState();
+    resetCommBus();
     ResetManager.softReset();
 }
 
@@ -535,6 +548,7 @@ void handleControlRequest(ControlCommand command) {
  * @param length The length of the message.
  */
 void onMqttMessage(char* topic, byte* payload, unsigned int length) {
+    actLED.on();
     Serial.print(F("INFO: [MQTT] Message arrived: ["));
     Serial.print(topic);
     Serial.print(F("] "));
@@ -592,6 +606,7 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
  */
 bool reconnectMqttClient() {
     if (!mqttClient.connected()) {
+        actLED.on();
         Serial.print(F("INFO: Attempting to establish MQTT connection to "));
         Serial.print(config.mqttBroker);
         Serial.print(F(" on port: "));
@@ -620,6 +635,8 @@ bool reconnectMqttClient() {
             Serial.println(failReason);
             return false;
         }
+
+        actLED.off();
     }
 
     return true;
@@ -718,6 +735,15 @@ void initOutputs() {
 
 void initComBus() {
     Serial.println(F("INIT: Initializing communication bus ..."));
+
+    // ******* CRITICAL *******
+    // We MUST drive the reset pin on the MCP23017 high or it will
+    // not function. But, tying the reset pin to an output allows
+    // us to programattically reset the I/O expander if needed.
+    pinMode(PIN_BUS_RESET, OUTPUT);
+    digitalWrite(PIN_BUS_RESET, HIGH);
+    // ************************
+    
     Wire.begin();
     scanBusDevices();
     if (primaryExpanderFound) {
@@ -726,7 +752,7 @@ void initComBus() {
     }
     else {
         Serial.println(F("ERROR: Primary host bus controller not found!!"));
-        // TODO HCF???
+        HCF();
     }
 
     Serial.println(F("INIT: Comm bus initialization complete."));
@@ -790,6 +816,8 @@ void initMDNS() {
  */
 void initMQTT() {
     Serial.print(F("INIT: Initializing MQTT client... "));
+    mqttClient.setBufferSize(256);
+    mqttClient.setKeepAlive(45);
     mqttClient.setServer(config.mqttBroker.c_str(), config.mqttPort);
     mqttClient.setCallback(onMqttMessage);
     Serial.println(F("DONE"));
@@ -1079,6 +1107,12 @@ void turnAllLightsOff() {
     publishSystemState();
 }
 
+void handleBusResetCommand() {
+    resetCommBus();
+    initComBus();
+    initLightController();
+}
+
 void initConsole() {
     Serial.print(F("INIT: Initializing console... "));
 
@@ -1105,6 +1139,8 @@ void initConsole() {
     Console.onAllLightsOn(turnAllLightsOn);
     Console.onAllLightsOff(turnAllLightsOff);
     Console.onResumeCommand(resumeNormal);
+    Console.onGetNetInfoCommand(printNetworkInfo);
+    Console.onBusReset(handleBusResetCommand);
 
     Serial.println(F("DONE"));
 }
