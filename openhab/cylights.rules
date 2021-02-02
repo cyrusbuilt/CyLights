@@ -43,6 +43,8 @@ then
             jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":2}"
         case "3":
             jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":3}"
+		case "16":
+			jsonString = "{\client_id"\":\"CYLIGHTS\",\"command\":16}"
     }
 
     logInfo(fileName, "Publishing MQTT Payload: " + jsonString)

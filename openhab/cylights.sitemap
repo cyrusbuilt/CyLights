@@ -10,7 +10,7 @@ sitemap cylights label="CyLights" {
         Text item=CyLightsSysState label="System State: Disabled" visibility=[CyLightsSysState==4]
         Text item=CyLightsSysState label="System State: Check-in" visibility=[CyLightsSysState==5]
         Text item=CyLightsSysState label="System State: Offline" visibility=[CyLightsSysState==NULL,CyLightsSysState==UNDEF]
-        Selection item=CyLightsSystemCommand label="Control" mappings=[0="Disable",1="Enable",2="Reboot",3="Request Status"]
+        Selection item=CyLightsSystemCommand label="Control" mappings=[0="Disable",1="Enable",2="Reboot",3="Request Status",16="I/O Reset"]
     }
 
     Frame label="Outlet Status and Control" {
