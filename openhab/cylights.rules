@@ -35,14 +35,16 @@ when
 then
     cmd = CyLightsSystemCommand.state.toString()
     switch(cmd) {
-        case "Disable":
+        case "0":
             jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":0}"
-        case "Enable":
+        case "1":
             jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":1}"
-        case "Reboot":
+        case "2":
             jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":2}"
-        case "Request Status":
+        case "3":
             jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":3}"
+		case "16":
+			jsonString = "{\client_id"\":\"CYLIGHTS\",\"command\":16}"
     }
 
     logInfo(fileName, "Publishing MQTT Payload: " + jsonString)

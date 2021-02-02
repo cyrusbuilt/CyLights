@@ -1,6 +1,6 @@
-String CyLightsSystemID "System ID: [%s]" <keyring> { channel="mqtt:topic:mosquitto:cylights:SysID" }
-String CyLightsVersion "Firmware version: [%s]" { channel="mqtt:topic:mosquitto:cylights:Version" }
-Number CyLightsSysState <status> { channel="mqtt:topic:mosquitto:cylights:SysState" }
+String CyLightsSystemID "System ID: [%s]" <keyring> { channel="mqtt:topic:mosquitto:cylights:CyLightsSysID" }
+String CyLightsVersion "Firmware version: [%s]" { channel="mqtt:topic:mosquitto:cylights:CyLightsVersion" }
+Number CyLightsSysState <status> { channel="mqtt:topic:mosquitto:cylights:CyLightsSysState" }
 String CyLightsSystemCommand "Actions" <switch>
 
 Number CyLights_Light1Status <poweroutlet_us> { channel="mqtt:topic:mosquitto:cylights:Light1Status" }

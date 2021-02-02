@@ -12,3 +12,5 @@ disassembly.txt
 
 # gerber bundle
 *.zip
+
+*.bak
