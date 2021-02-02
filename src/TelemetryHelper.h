@@ -98,7 +98,12 @@ enum class ControlCommand: uint8_t {
 	/**
 	 * Turn ALL lights (outlets) off.
 	 */
-	ALL_OFF = 15
+	ALL_OFF = 15,
+
+	/**
+	 * Reset the onboard I/O controller.
+	 */
+	IO_RESET = 16
 };
 
 /**

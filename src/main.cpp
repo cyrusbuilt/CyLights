@@ -1,6 +1,6 @@
 /**
  * main.cpp
- * CyLights v1.1
+ * CyLights v1.2
  * 
  * Author:
  *  Chris (Cyrus) Brunner
@@ -528,6 +528,9 @@ void handleControlRequest(ControlCommand command) {
             break;
         case ControlCommand::REBOOT:
             reboot();
+            break;
+        case ControlCommand::IO_RESET:
+            resetCommBus();
             break;
         case ControlCommand::REQUEST_STATUS:
             break;

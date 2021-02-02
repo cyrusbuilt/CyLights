@@ -1,9 +1,9 @@
 {
     "hostname": "CYLIGHTS",
     "useDHCP": true,
-    "ip": "192.168.0.220",
-    "gateway": "192.168.0.1",
-    "subnetMask": "255.255.255.0",
+    "ip": "your_static_ip_here",
+    "gateway": "your_gateway_ip_here",
+    "subnetMask": "your_subnet_mask_here",
     "wifiSSID": "your_wifi_ssid_here",
     "wifiPassword": "your_wifi_password_here",
     "mqttBroker": "your_mqtt_broker",
