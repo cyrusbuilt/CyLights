@@ -13,4 +13,11 @@ disassembly.txt
 # gerber bundle
 *.zip
 
+# backup files
 *.bak
+
+# We don't need any of these
+docs/
+lib/
+test/
+include/

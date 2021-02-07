@@ -44,7 +44,7 @@ then
         case "3":
             jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":3}"
 		case "16":
-			jsonString = "{\client_id"\":\"CYLIGHTS\",\"command\":16}"
+			jsonString = "{\"client_id\":\"CYLIGHTS\",\"command\":16}"
     }
 
     logInfo(fileName, "Publishing MQTT Payload: " + jsonString)
@@ -204,10 +204,10 @@ end
 
 rule "Light 1 Off Time"
 when
-    Item CyLights_Light1OffnAlarmHour changed or Item CyLights_Light1OffAlarmMinute changed
+    Item CyLights_Light1OffAlarmHour changed or Item CyLights_Light1OffAlarmMinute changed
 then
     val settingsOffOrInvalid = (CyLights_Light1OffAlarmHour === NULL
-		|| CyLights_Light1OffnAlarmHour.state === NULL
+		|| CyLights_Light1OffAlarmHour.state === NULL
 		|| CyLights_Light1OffAlarmMinute === NULL
 		|| CyLights_Light1OffAlarmMinute.state === NULL)
     
@@ -308,10 +308,10 @@ end
 
 rule "Light 2 Off Time"
 when
-    Item CyLights_Light2OffnAlarmHour changed or Item CyLights_Light2OffAlarmMinute changed
+    Item CyLights_Light2OffAlarmHour changed or Item CyLights_Light2OffAlarmMinute changed
 then
     val settingsOffOrInvalid = (CyLights_Light2OffAlarmHour === NULL
-		|| CyLights_Light2OffnAlarmHour.state === NULL
+		|| CyLights_Light2OffAlarmHour.state === NULL
 		|| CyLights_Light2OffAlarmMinute === NULL
 		|| CyLights_Light2OffAlarmMinute.state === NULL)
     
@@ -412,10 +412,10 @@ end
 
 rule "Light 3 Off Time"
 when
-    Item CyLights_Light3OffnAlarmHour changed or Item CyLights_Light3OffAlarmMinute changed
+    Item CyLights_Light3OffAlarmHour changed or Item CyLights_Light3OffAlarmMinute changed
 then
     val settingsOffOrInvalid = (CyLights_Light3OffAlarmHour === NULL
-		|| CyLights_Light3OffnAlarmHour.state === NULL
+		|| CyLights_Light3OffAlarmHour.state === NULL
 		|| CyLights_Light3OffAlarmMinute === NULL
 		|| CyLights_Light3OffAlarmMinute.state === NULL)
     
@@ -516,10 +516,10 @@ end
 
 rule "Light 4 Off Time"
 when
-    Item CyLights_Light4OffnAlarmHour changed or Item CyLights_Light4OffAlarmMinute changed
+    Item CyLights_Light4OffAlarmHour changed or Item CyLights_Light4OffAlarmMinute changed
 then
     val settingsOffOrInvalid = (CyLights_Light4OffAlarmHour === NULL
-		|| CyLights_Light4OffnAlarmHour.state === NULL
+		|| CyLights_Light4OffAlarmHour.state === NULL
 		|| CyLights_Light4OffAlarmMinute === NULL
 		|| CyLights_Light4OffAlarmMinute.state === NULL)
     
@@ -620,10 +620,10 @@ end
 
 rule "Light 5 Off Time"
 when
-    Item CyLights_Light5OffnAlarmHour changed or Item CyLights_Light5OffAlarmMinute changed
+    Item CyLights_Light5OffAlarmHour changed or Item CyLights_Light5OffAlarmMinute changed
 then
     val settingsOffOrInvalid = (CyLights_Light5OffAlarmHour === NULL
-		|| CyLights_Light5OffnAlarmHour.state === NULL
+		|| CyLights_Light5OffAlarmHour.state === NULL
 		|| CyLights_Light5OffAlarmMinute === NULL
 		|| CyLights_Light5OffAlarmMinute.state === NULL)
     

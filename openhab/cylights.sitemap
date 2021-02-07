@@ -46,8 +46,8 @@ sitemap cylights label="CyLights" {
             Setpoint item=CyLights_Light3OnAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
         }
         Text label="Light 3 Off Time" icon="time" {
-            Setpoint item=CyLights_Light3OnAlarmHour label="Hour" minValue=0 maxValue=23 step=1
-            Setpoint item=CyLights_Light3OnAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
+            Setpoint item=CyLights_Light3OffAlarmHour label="Hour" minValue=0 maxValue=23 step=1
+            Setpoint item=CyLights_Light3OffAlarmMinute label="Minute" minValue=0 maxValue=55 step=5
         }
 
         Switch item=CyLights_Light4Switch
