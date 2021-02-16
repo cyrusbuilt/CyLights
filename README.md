@@ -22,7 +22,7 @@ Ok, fair enough. Consider this a quick start guide then:
 
 3) Assemble the CyLights board, then remove the battery from the Etekcity remote and disassemble it (it only has 2 small phillips head screws).
 
-4) Cut one end off each dupont cable, strip a small amount of insulation off each one and solder each lead to the inside contact of each button on the remote (guide coming soon).
+4) Cut one end off each dupont cable, strip a small amount of insulation off each one and solder each lead to the inside contact of each button and one lead each to the battery terminals on the remote (guide coming soon).
 
 5) Connect each dupont cable to the appropriate pins on pin header J2 on the CyLights board.
 
