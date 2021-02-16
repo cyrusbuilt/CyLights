@@ -5,41 +5,41 @@ String CyLightsSystemCommand "Actions" <switch>
 
 Number CyLights_Light1Status <poweroutlet_us> { channel="mqtt:topic:mosquitto:cylights:Light1Status" }
 Switch CyLights_Light1Switch "Outlet 1" <slider>
-Number CyLights_Light1OnAlarmHour "On Time Hour [%s]"
-Number CyLights_Light1OnAlarmMinute "On Time Minute [%s]"
-Number CyLights_Light1OffAlarmHour "Off Time Hour [%s]"
-Number CyLights_Light1OffAlarmMinute "Off Time Minute [%s]"
+Number CyLights_Light1OnAlarmHour "On Time Hour [%d]"
+Number CyLights_Light1OnAlarmMinute "On Time Minute [%d]"
+Number CyLights_Light1OffAlarmHour "Off Time Hour [%d]"
+Number CyLights_Light1OffAlarmMinute "Off Time Minute [%d]"
 
 Number CyLights_Light2Status <poweroutlet_us> { channel="mqtt:topic:mosquitto:cylights:Light2Status" }
 Switch CyLights_Light2Switch "Outlet 2" <slider>
-Number CyLights_Light2OnAlarmHour "On Time Hour [%s]"
-Number CyLights_Light2OnAlarmMinute "On Time Minute [%s]"
-Number CyLights_Light2OffAlarmHour "Off Time Hour [%s]"
-Number CyLights_Light2OffAlarmMinute "Off Time Minute [%s]"
+Number CyLights_Light2OnAlarmHour "On Time Hour [%d]"
+Number CyLights_Light2OnAlarmMinute "On Time Minute [%d]"
+Number CyLights_Light2OffAlarmHour "Off Time Hour [%d]"
+Number CyLights_Light2OffAlarmMinute "Off Time Minute [%d]"
 
 Number CyLights_Light3Status <poweroutlet_us> { channel="mqtt:topic:mosquitto:cylights:Light3Status" }
 Switch CyLights_Light3Switch "Outlet 3" <slider>
-Number CyLights_Light3OnAlarmHour "On Time Hour [%s]"
-Number CyLights_Light3OnAlarmMinute "On Time Minute [%s]"
-Number CyLights_Light3OffAlarmHour "Off Time Hour [%s]"
-Number CyLights_Light3OffAlarmMinute "Off Time Minute [%s]"
+Number CyLights_Light3OnAlarmHour "On Time Hour [%d]"
+Number CyLights_Light3OnAlarmMinute "On Time Minute [%d]"
+Number CyLights_Light3OffAlarmHour "Off Time Hour [%d]"
+Number CyLights_Light3OffAlarmMinute "Off Time Minute [%d]"
 
 Number CyLights_Light4Status <poweroutlet_us> { channel="mqtt:topic:mosquitto:cylights:Light4Status" }
 Switch CyLights_Light4Switch "Outlet 4" <slider>
-Number CyLights_Light4OnAlarmHour "On Time Hour [%s]"
-Number CyLights_Light4OnAlarmMinute "On Time Minute [%s]"
-Number CyLights_Light4OffAlarmHour "Off Time Hour [%s]"
-Number CyLights_Light4OffAlarmMinute "Off Time Minute [%s]"
+Number CyLights_Light4OnAlarmHour "On Time Hour [%d]"
+Number CyLights_Light4OnAlarmMinute "On Time Minute [%d]"
+Number CyLights_Light4OffAlarmHour "Off Time Hour [%d]"
+Number CyLights_Light4OffAlarmMinute "Off Time Minute [%d]"
 
 Number CyLights_Light5Status <poweroutlet_us> { channel="mqtt:topic:mosquitto:cylights:Light5Status" }
 Switch CyLights_Light5Switch "Outlet 5" <slider>
-Number CyLights_Light5OnAlarmHour "On Time Hour [%s]"
-Number CyLights_Light5OnAlarmMinute "On Time Minute [%s]"
-Number CyLights_Light5OffAlarmHour "Off Time Hour [%s]"
-Number CyLights_Light5OffAlarmMinute "Off Time Minute [%s]"
+Number CyLights_Light5OnAlarmHour "On Time Hour [%d]"
+Number CyLights_Light5OnAlarmMinute "On Time Minute [%d]"
+Number CyLights_Light5OffAlarmHour "Off Time Hour [%d]"
+Number CyLights_Light5OffAlarmMinute "Off Time Minute [%d]"
 
 Switch CyLightsAllSwitch "All Lights" <slider>
-Number CyLightsAllLightsOnAlarmHour "On Time Hour [%s]"
-Number CyLightsAllLightsOnAlarmMinute "On Time Minute [%s]"
-Number CyLightsAllLightsOffAlarmHour "Off Time Hour [%s]"
-Number CyLightsAllLightsOffAlarmMinute "Off Time Minute [%s]"
+Number CyLightsAllLightsOnAlarmHour "On Time Hour [%d]"
+Number CyLightsAllLightsOnAlarmMinute "On Time Minute [%d]"
+Number CyLightsAllLightsOffAlarmHour "Off Time Hour [%d]"
+Number CyLightsAllLightsOffAlarmMinute "Off Time Minute [%d]"

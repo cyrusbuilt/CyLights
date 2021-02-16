@@ -267,7 +267,6 @@ void setConfigurationDefaults() {
     config.clockTimezone = CLOCK_TIMEZONE;
     config.dns = defaultDns;
     config.gw = defaultGw;
-
     #ifdef ENABLE_OTA
         config.otaPassword = OTA_PASSWORD;
         config.otaPort = OTA_HOST_PORT;
@@ -565,7 +564,7 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
 
     Serial.println(msg);
 
-    StaticJsonDocument<100> doc;
+    StaticJsonDocument<200> doc;
     DeserializationError error = deserializeJson(doc, msg);
     if (error) {
         Serial.print(F("ERROR: Failed to parse MQTT message to JSON: "));
