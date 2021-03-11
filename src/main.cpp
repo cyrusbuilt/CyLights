@@ -78,7 +78,6 @@ volatile SystemState sysState = SystemState::BOOTING;
  */
 void onSyncClock() {
     configTime(CLOCK_TIMEZONE * 3600, 0, "pool.ntp.org", "time.nist.gov");
-
     Serial.print(F("INIT: Waiting for NTP time sync..."));
     delay(500);
     while (!time(nullptr)) {
