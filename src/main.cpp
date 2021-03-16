@@ -332,6 +332,7 @@ void loadConfiguration() {
     if (error) {
         Serial.println(F("FAIL"));
         Serial.println(F("ERROR: Failed to parse config file to JSON. Using default config."));
+        configFile.close();
         return;
     }
 
@@ -563,7 +564,9 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
 
     Serial.println(msg);
 
-    StaticJsonDocument<200> doc;
+    uint16_t freeMem = ESP.getMaxFreeBlockSize() - 512;
+    DynamicJsonDocument doc(freeMem);
+
     DeserializationError error = deserializeJson(doc, msg);
     if (error) {
         Serial.print(F("ERROR: Failed to parse MQTT message to JSON: "));
@@ -572,6 +575,7 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
         return;
     }
 
+    doc.shrinkToFit();
     if (doc.containsKey("client_id")) {
         String id = doc["client_id"].as<String>();
         id.toUpperCase();
@@ -594,6 +598,7 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
     }
 
     ControlCommand cmd = (ControlCommand)doc["command"].as<uint8_t>();
+    doc.clear();
     handleControlRequest(cmd);
 }
 
@@ -784,6 +789,7 @@ void initFilesystem() {
 
     filesystemMounted = true;
     Serial.println(F("DONE"));
+    setConfigurationDefaults();
     loadConfiguration();
 }
 
