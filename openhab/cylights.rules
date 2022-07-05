@@ -27,6 +27,7 @@ var Timer light5OnTimer = null
 var Timer light5OffTimer = null
 var Timer allLightsOnTimer = null
 var Timer allLightsOffTimer = null
+val ZoneId zoneId = ZoneId.of("America/New_York")
 val actionsBroker = getActions("mqtt", "mqtt:broker:mosquitto")
 
 rule "Send System Command"
@@ -181,13 +182,15 @@ then
 	logInfo(fileName, "Light 1 On time: " + newTime.toString())
 
 	val epoch = newTime.toInstant().toEpochMilli()
+	val Instant instant = Instant.ofEpochSecond(epoch)
+	val ZonedDateTime epochInstant = ZonedDateTime.ofInstant(instant, zoneId)
 	if (light1OnTimer !== null) {
 		logInfo(fileName, "Rescheduling Light 1 on time alarm.")
-		light1OnTimer.reschedule(new DateTime(epoch))
+		light1OnTimer.reschedule(epochInstant)
 	}
 	else {
 		logInfo(fileName, "New Light 1 on time alarm: " + newTime.toString())
-		light1OnTimer = createTimer(new DateTime(epoch), [ |
+		light1OnTimer = createTimer(epochInstant, [ |
 			if (CyLights_Light1Switch.state !== ON) {
 				CyLights_Light1Switch.postUpdate(ON)
 			}
@@ -195,9 +198,11 @@ then
 			val nextTime = ZonedDateTime.now.plusDays(1)
 			val newRescheduleTime = getNextAlarm.apply(nextTime)
 			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			val Instant innerInstant = Instant.ofEpochSecond(innerEpoch)
+			val ZonedDateTime innerEpochInstant = ZonedDateTime.ofInstant(innerInstant, zoneId)
 			
 			logInfo(fileName, "Light 1 On timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
-			light1OnTimer.reschedule(new DateTime(innerEpoch))
+			light1OnTimer.reschedule(innerEpochInstant)
 		])
 	}
 end
@@ -233,13 +238,15 @@ then
 	logInfo(fileName, "Light 1 Off time: " + newTime.toString())
 
 	val epoch = newTime.toInstant().toEpochMilli()
+	val Instant instant = Instant.ofEpochSecond(epoch)
+	val ZonedDateTime epochInstant = ZonedDateTime.ofInstant(instant, zoneId)
 	if (light1OffTimer !== null) {
 		logInfo(fileName, "Rescheduling Light 1 off time alarm.")
-		light1OffTimer.reschedule(new DateTime(epoch))
+		light1OffTimer.reschedule(epochInstant)
 	}
 	else {
 		logInfo(fileName, "New Light 1 off time alarm: " + newTime.toString())
-		light1OffTimer = createTimer(new DateTime(epoch), [ |
+		light1OffTimer = createTimer(epochInstant, [ |
 			if (CyLights_Light1Switch.state !== OFF) {
 				CyLights_Light1Switch.postUpdate(OFF)
 			}
@@ -247,9 +254,11 @@ then
 			val nextTime = ZonedDateTime.now.plusDays(1)
 			val newRescheduleTime = getNextAlarm.apply(nextTime)
 			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			val Instant innerInstant = Instant.ofEpochSecond(innerEpoch)
+			val ZonedDateTime innerEpochInstant = ZonedDateTime.ofInstant(innerInstant, zoneId)
 			
 			logInfo(fileName, "Light 1 Off timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
-			light1OffTimer.reschedule(new DateTime(innerEpoch))
+			light1OffTimer.reschedule(innerEpochInstant)
 		])
 	}
 end
@@ -285,13 +294,15 @@ then
 	logInfo(fileName, "Light 2 On time: " + newTime.toString())
 
 	val epoch = newTime.toInstant().toEpochMilli()
+	val Instant instant = Instant.ofEpochSecond(epoch)
+	val ZonedDateTime epochInstant = ZonedDateTime.ofInstant(instant, zoneId)
 	if (light2OnTimer !== null) {
 		logInfo(fileName, "Rescheduling Light 2 on time alarm.")
-		light2OnTimer.reschedule(new DateTime(epoch))
+		light2OnTimer.reschedule(epochInstant)
 	}
 	else {
 		logInfo(fileName, "New Light 2 on time alarm: " + newTime.toString())
-		light2OnTimer = createTimer(new DateTime(epoch), [ |
+		light2OnTimer = createTimer(epochInstant, [ |
 			if (CyLights_Light2Switch.state !== ON) {
 				CyLights_Light2Switch.postUpdate(ON)
 			}
@@ -299,9 +310,11 @@ then
 			val nextTime = ZonedDateTime.now.plusDays(1)
 			val newRescheduleTime = getNextAlarm.apply(nextTime)
 			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			val Instant innerInstant = Instant.ofEpochSecond(innerEpoch)
+			val ZonedDateTime innerEpochInstant = ZonedDateTime.ofInstant(innerInstant, zoneId)
 			
 			logInfo(fileName, "Light 2 On timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
-			light2OnTimer.reschedule(new DateTime(innerEpoch))
+			light2OnTimer.reschedule(innerEpochInstant)
 		])
 	}
 end
@@ -337,13 +350,15 @@ then
 	logInfo(fileName, "Light 2 Off time: " + newTime.toString())
 
 	val epoch = newTime.toInstant().toEpochMilli()
+	val Instant instant = Instant.ofEpochSecond(epoch)
+	val ZonedDateTime epochInstant = ZonedDateTime.ofInstant(instant, zoneId)
 	if (light2OffTimer !== null) {
 		logInfo(fileName, "Rescheduling Light 2 off time alarm.")
-		light2OffTimer.reschedule(new DateTime(epoch))
+		light2OffTimer.reschedule(epochInstant)
 	}
 	else {
 		logInfo(fileName, "New Light 2 off time alarm: " + newTime.toString())
-		light2OffTimer = createTimer(new DateTime(epoch), [ |
+		light2OffTimer = createTimer(epochInstant, [ |
 			if (CyLights_Light2Switch.state !== OFF) {
 				CyLights_Light2Switch.postUpdate(OFF)
 			}
@@ -351,9 +366,11 @@ then
 			val nextTime = ZonedDateTime.now.plusDays(1)
 			val newRescheduleTime = getNextAlarm.apply(nextTime)
 			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			val Instant innerInstant = Instant.ofEpochSecond(innerEpoch)
+			val ZonedDateTime innerEpochInstant = ZonedDateTime.ofInstant(innerInstant, zoneId)
 			
 			logInfo(fileName, "Light 2 Off timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
-			light2OffTimer.reschedule(new DateTime(innerEpoch))
+			light2OffTimer.reschedule(innerEpochInstant)
 		])
 	}
 end
@@ -389,13 +406,15 @@ then
 	logInfo(fileName, "Light 3 On time: " + newTime.toString())
 
 	val epoch = newTime.toInstant().toEpochMilli()
+	val Instant instant = Instant.ofEpochSecond(epoch)
+	val ZonedDateTime epochInstant = ZonedDateTime.ofInstant(instant, zoneId)
 	if (light3OnTimer !== null) {
 		logInfo(fileName, "Rescheduling Light 3 on time alarm.")
-		light3OnTimer.reschedule(new DateTime(epoch))
+		light3OnTimer.reschedule(epochInstant)
 	}
 	else {
 		logInfo(fileName, "New Light 3 on time alarm: " + newTime.toString())
-		light3OnTimer = createTimer(new DateTime(epoch), [ |
+		light3OnTimer = createTimer(epochInstant, [ |
 			if (CyLights_Light3Switch.state !== ON) {
 				CyLights_Light3Switch.postUpdate(ON)
 			}
@@ -403,9 +422,11 @@ then
 			val nextTime = ZonedDateTime.now.plusDays(1)
 			val newRescheduleTime = getNextAlarm.apply(nextTime)
 			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			val Instant innerInstant = Instant.ofEpochSecond(innerEpoch)
+			val ZonedDateTime innerEpochInstant = ZonedDateTime.ofInstant(innerInstant, zoneId)
 			
 			logInfo(fileName, "Light 3 On timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
-			light3OnTimer.reschedule(new DateTime(innerEpoch))
+			light3OnTimer.reschedule(innerEpochInstant)
 		])
 	}
 end
@@ -441,13 +462,15 @@ then
 	logInfo(fileName, "Light 3 Off time: " + newTime.toString())
 
 	val epoch = newTime.toInstant().toEpochMilli()
+	val Instant instant = Instant.ofEpochSecond(epoch)
+	val ZonedDateTime epochInstant = ZonedDateTime.ofInstant(instant, zoneId)
 	if (light3OffTimer !== null) {
 		logInfo(fileName, "Rescheduling Light 3 off time alarm.")
-		light3OffTimer.reschedule(new DateTime(epoch))
+		light3OffTimer.reschedule(epochInstant)
 	}
 	else {
 		logInfo(fileName, "New Light 3 off time alarm: " + newTime.toString())
-		light3OffTimer = createTimer(new DateTime(epoch), [ |
+		light3OffTimer = createTimer(epochInstant, [ |
 			if (CyLights_Light3Switch.state !== OFF) {
 				CyLights_Light3Switch.postUpdate(OFF)
 			}
@@ -455,9 +478,11 @@ then
 			val nextTime = ZonedDateTime.now.plusDays(1)
 			val newRescheduleTime = getNextAlarm.apply(nextTime)
 			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			val Instant innerInstant = Instant.ofEpochSecond(innerEpoch)
+			val ZonedDateTime innerEpochInstant = ZonedDateTime.ofInstant(innerInstant, zoneId)
 			
 			logInfo(fileName, "Light 3 Off timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
-			light3OffTimer.reschedule(new DateTime(innerEpoch))
+			light3OffTimer.reschedule(innerEpochInstant)
 		])
 	}
 end
@@ -493,13 +518,15 @@ then
 	logInfo(fileName, "Light 4 On time: " + newTime.toString())
 
 	val epoch = newTime.toInstant().toEpochMilli()
+	val Instant instant = Instant.ofEpochSecond(epoch)
+	val ZonedDateTime epochInstant = ZonedDateTime.ofInstant(instant, zoneId)
 	if (light4OnTimer !== null) {
 		logInfo(fileName, "Rescheduling Light 4 on time alarm.")
-		light4OnTimer.reschedule(new DateTime(epoch))
+		light4OnTimer.reschedule(epochInstant)
 	}
 	else {
 		logInfo(fileName, "New Light 4 on time alarm: " + newTime.toString())
-		light4OnTimer = createTimer(new DateTime(epoch), [ |
+		light4OnTimer = createTimer(epochInstant, [ |
 			if (CyLights_Light4Switch.state !== ON) {
 				CyLights_Light4Switch.postUpdate(ON)
 			}
@@ -507,9 +534,11 @@ then
 			val nextTime = ZonedDateTime.now.plusDays(1)
 			val newRescheduleTime = getNextAlarm.apply(nextTime)
 			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			val Instant innerInstant = Instant.ofEpochSecond(innerEpoch)
+			val ZonedDateTime innerEpochInstant = ZonedDateTime.ofInstant(innerInstant, zoneId)
 			
 			logInfo(fileName, "Light 4 On timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
-			light4OnTimer.reschedule(new DateTime(innerEpoch))
+			light4OnTimer.reschedule(innerEpochInstant)
 		])
 	}
 end
@@ -545,13 +574,15 @@ then
 	logInfo(fileName, "Light 4 Off time: " + newTime.toString())
 
 	val epoch = newTime.toInstant().toEpochMilli()
+	val Instant instant = Instant.ofEpochSecond(epoch)
+	val ZonedDateTime epochInstant = ZonedDateTime.ofInstant(instant, zoneId)
 	if (light4OffTimer !== null) {
 		logInfo(fileName, "Rescheduling Light 4 off time alarm.")
-		light4OffTimer.reschedule(new DateTime(epoch))
+		light4OffTimer.reschedule(epochInstant)
 	}
 	else {
 		logInfo(fileName, "New Light 4 off time alarm: " + newTime.toString())
-		light4OffTimer = createTimer(new DateTime(epoch), [ |
+		light4OffTimer = createTimer(epochInstant, [ |
 			if (CyLights_Light4Switch.state !== OFF) {
 				CyLights_Light4Switch.postUpdate(OFF)
 			}
@@ -559,9 +590,11 @@ then
 			val nextTime = ZonedDateTime.now.plusDays(1)
 			val newRescheduleTime = getNextAlarm.apply(nextTime)
 			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			val Instant innerInstant = Instant.ofEpochSecond(innerEpoch)
+			val ZonedDateTime innerEpochInstant = ZonedDateTime.ofInstant(innerInstant, zoneId)
 			
 			logInfo(fileName, "Light 4 Off timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
-			light4OffTimer.reschedule(new DateTime(innerEpoch))
+			light4OffTimer.reschedule(innerEpochInstant)
 		])
 	}
 end
@@ -597,13 +630,15 @@ then
 	logInfo(fileName, "Light 5 On time: " + newTime.toString())
 
 	val epoch = newTime.toInstant().toEpochMilli()
+	val Instant instant = Instant.ofEpochSecond(epoch)
+	val ZonedDateTime epochInstant = ZonedDateTime.ofInstant(instant, zoneId)
 	if (light5OnTimer !== null) {
 		logInfo(fileName, "Rescheduling Light 5 on time alarm.")
-		light5OnTimer.reschedule(new DateTime(epoch))
+		light5OnTimer.reschedule(epochInstant)
 	}
 	else {
 		logInfo(fileName, "New Light 5 on time alarm: " + newTime.toString())
-		light5OnTimer = createTimer(new DateTime(epoch), [ |
+		light5OnTimer = createTimer(epochInstant, [ |
 			if (CyLights_Light5Switch.state !== ON) {
 				CyLights_Light5Switch.postUpdate(ON)
 			}
@@ -611,9 +646,11 @@ then
 			val nextTime = ZonedDateTime.now.plusDays(1)
 			val newRescheduleTime = getNextAlarm.apply(nextTime)
 			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			val Instant innerInstant = Instant.ofEpochSecond(innerEpoch)
+			val ZonedDateTime innerEpochInstant = ZonedDateTime.ofInstant(innerInstant, zoneId)
 			
 			logInfo(fileName, "Light 5 On timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
-			light5OnTimer.reschedule(new DateTime(innerEpoch))
+			light5OnTimer.reschedule(innerEpochInstant)
 		])
 	}
 end
@@ -649,13 +686,15 @@ then
 	logInfo(fileName, "Light 5 Off time: " + newTime.toString())
 
 	val epoch = newTime.toInstant().toEpochMilli()
+	val Instant instant = Instant.ofEpochSecond(epoch)
+	val ZonedDateTime epochInstant = ZonedDateTime.ofInstant(instant, zoneId)
 	if (light5OffTimer !== null) {
 		logInfo(fileName, "Rescheduling Light 5 off time alarm.")
-		light5OffTimer.reschedule(new DateTime(epoch))
+		light5OffTimer.reschedule(epochInstant)
 	}
 	else {
 		logInfo(fileName, "New Light 5 off time alarm: " + newTime.toString())
-		light5OffTimer = createTimer(new DateTime(epoch), [ |
+		light5OffTimer = createTimer(epochInstant, [ |
 			if (CyLights_Light5Switch.state !== OFF) {
 				CyLights_Light5Switch.postUpdate(OFF)
 			}
@@ -663,9 +702,11 @@ then
 			val nextTime = ZonedDateTime.now.plusDays(1)
 			val newRescheduleTime = getNextAlarm.apply(nextTime)
 			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			val Instant innerInstant = Instant.ofEpochSecond(innerEpoch)
+			val ZonedDateTime innerEpochInstant = ZonedDateTime.ofInstant(innerInstant, zoneId)
 			
 			logInfo(fileName, "Light 5 Off timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
-			light5OffTimer.reschedule(new DateTime(innerEpoch))
+			light5OffTimer.reschedule(innerEpochInstant)
 		])
 	}
 end
@@ -701,13 +742,15 @@ then
 	logInfo(fileName, "All Lights On time: " + newTime.toString())
 
 	val epoch = newTime.toInstant().toEpochMilli()
+	val Instant instant = Instant.ofEpochSecond(epoch)
+	val ZonedDateTime epochInstant = ZonedDateTime.ofInstant(instant, zoneId)
 	if (allLightsOnTimer !== null) {
 		logInfo(fileName, "Rescheduling All Lights on time alarm.")
-		allLightsOnTimer.reschedule(new DateTime(epoch))
+		allLightsOnTimer.reschedule(epochInstant)
 	}
 	else {
 		logInfo(fileName, "New All Lights on time alarm: " + newTime.toString())
-		allLightsOnTimer = createTimer(new DateTime(epoch), [ |
+		allLightsOnTimer = createTimer(epochInstant, [ |
 			if (CyLightsAllSwitch.state !== ON) {
 				CyLightsAllSwitch.postUpdate(ON)
 			}
@@ -715,9 +758,11 @@ then
 			val nextTime = ZonedDateTime.now.plusDays(1)
 			val newRescheduleTime = getNextAlarm.apply(nextTime)
 			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			val Instant innerInstant = Instant.ofEpochSecond(innerEpoch)
+			val ZonedDateTime innerEpochInstant = ZonedDateTime.ofInstant(innerInstant, zoneId)
 			
 			logInfo(fileName, "All Lights On timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
-			allLightsOnTimer.reschedule(new DateTime(innerEpoch))
+			allLightsOnTimer.reschedule(innerEpochInstant)
 		])
 	}
 end
@@ -753,13 +798,15 @@ then
 	logInfo(fileName, "All Lights Off time: " + newTime.toString())
 
 	val epoch = newTime.toInstant().toEpochMilli()
+	val Instant instant = Instant.ofEpochSecond(epoch)
+	val ZonedDateTime epochInstant = ZonedDateTime.ofInstant(instant, zoneId)
 	if (allLightsOffTimer !== null) {
 		logInfo(fileName, "Rescheduling All Lights off time alarm.")
-		allLightsOffTimer.reschedule(new DateTime(epoch))
+		allLightsOffTimer.reschedule(epochInstant)
 	}
 	else {
 		logInfo(fileName, "New All Lights off time alarm: " + newTime.toString())
-		allLightsOffTimer = createTimer(new DateTime(epoch), [ |
+		allLightsOffTimer = createTimer(epochInstant, [ |
 			if (CyLightsAllSwitch.state !== OFF) {
 				CyLightsAllSwitch.postUpdate(OFF)
 			}
@@ -767,9 +814,11 @@ then
 			val nextTime = ZonedDateTime.now.plusDays(1)
 			val newRescheduleTime = getNextAlarm.apply(nextTime)
 			val innerEpoch = newRescheduleTime.toInstant().toEpochMilli()
+			val Instant innerInstant = Instant.ofEpochSecond(innerEpoch)
+			val ZonedDateTime innerEpochInstant = ZonedDateTime.ofInstant(innerInstant, zoneId)
 			
 			logInfo(fileName, "All Lights Off timer fired. Alarm rescheduled: " + newRescheduleTime.toString())
-			allLightsOffTimer.reschedule(new DateTime(innerEpoch))
+			allLightsOffTimer.reschedule(innerEpochInstant)
 		])
 	}
 end
