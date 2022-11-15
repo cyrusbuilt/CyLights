@@ -1,6 +1,6 @@
 # CyLights
 
-[![Build Status](https://travis-ci.com/cyrusbuilt/CyLights.svg?branch=master)](https://travis-ci.com/cyrusbuilt/CyLights)
+![Build Status](https://github.com/cyrusbuilt/CyLights/actions/workflows/ci.yml/badge.svg)
 
 IoT Integration Control Board and Firmware for remote controlled 5-outlet system.
 

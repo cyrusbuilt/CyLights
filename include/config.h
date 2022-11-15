@@ -5,6 +5,8 @@
 
 // Configuration
 #define DEBUG                                   // Uncomment to enable additional debug info.
+#define DEVICE_NAME "CYLIGHTS"                  // The device name.
+#define DEVICE_CLASS "cylights"                 // The device class (used for discovery).
 #define ENABLE_OTA                              // Comment this line to disable OTA updates.
 #define ENABLE_MDNS                             // Comment this line to disable the MDNS.
 #define DEFAULT_SSID "your_ssid_here"           // Put the SSID of your WiFi here.
@@ -15,9 +17,9 @@
 #define CHECK_WIFI_INTERVAL 60000               // How often to check WiFi status (milliseconds).
 #define CHECK_MQTT_INTERVAL 120000               // How often to check connectivity to the MQTT broker.
 #define CLOCK_SYNC_INTERVAL 3600000             // How often to sync the local clock with NTP (milliseconds).
-#define MQTT_TOPIC_STATUS "cylights/status"     // The MQTT channel to publish status messages to.
-#define MQTT_TOPIC_CONTROL "cylights/control"   // The MQTT channel to subscribe to for control messages.
-#define DEVICE_NAME "CYLIGHTS"                  // The device name.
+#define MQTT_TOPIC_STATUS "cylights/status"     // The MQTT topic to publish status messages to.
+#define MQTT_TOPIC_CONTROL "cylights/control"   // The MQTT topic to subscribe to for control messages.
+#define MQTT_TOPIC_DISCOVERY "redqueen/config"  // The MQTT topic to publish discovery packets to.
 #define BUTTON_PULSE_DELAY 1000                 // How long to pulse an on/off button.
 #define MQTT_BROKER "your_mqtt_host_here"       // The host name or IP of the MQTT broker to connect to.
 #define MQTT_PORT 1883                          // The MQTT port to connect on (default is 1883).
@@ -47,6 +49,7 @@ typedef struct {
     // MQTT stuff
     String mqttTopicStatus;
     String mqttTopicControl;
+    String mqttTopicDiscovery;
     String mqttBroker;
     String mqttUsername;
     String mqttPassword;
