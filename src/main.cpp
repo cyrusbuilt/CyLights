@@ -1,16 +1,17 @@
 /**
- * main.cpp
- * CyLights v1.2
+ * @file main.cpp
+ * @author Chris (Cyrus) Brunner (cyrusbuilt at gmail dot com)
  * 
- * Author:
- *  Chris (Cyrus) Brunner
- * 
+ * @brief CyLights Firmware
  * This is the firmware for CyLights, an IoT integration system designed to
  * be used with a modified version of the Etekcity 5-outlet remote control
  * system. CyLights is meant to essentially convert the remote control into
  * an RF transmitter peripheral which is then powered and controlled by CyLights
  * itself and can then be controlled over MQTT and can be integrated with
  * home automation systems such as OpenHab.
+ * 
+ * @version 1.3
+ * @copyright Copyright (c) Cyrus Brunner 2022
  */
 
 #ifndef ESP8266
@@ -23,6 +24,7 @@
 #include <WiFiClient.h>
 #include <Wire.h>
 #include <time.h>
+#include <TZ.h>
 #include "config.h"
 #include "Adafruit_MCP23017.h"
 #include "TelemetryHelper.h"
@@ -36,7 +38,7 @@
 #include "LightController.h"
 #include "Console.h"
 
-#define VERSION "1.2"
+#define VERSION "1.3"
 
 #define PRIMARY_I2C_ADDRESS 0
 #define I2C_ADDRESS_OFFSET 32
@@ -72,12 +74,25 @@ bool primaryExpanderFound = false;
 volatile SystemState sysState = SystemState::BOOTING;
 
 /**
- * Synchronize the local system clock via NTP. Note: This does not take DST
+ * @brief Get the Current Time object
+ * 
+ * @return String 
+ */
+String getCurrentTime() {
+    time_t now = time(nullptr);
+    struct tm *timeinfo = localtime(&now);
+    String result = String(asctime(timeinfo));
+    result.replace("\n", "");
+    return result;
+}
+
+/**
+ * @brief Synchronize the local system clock via NTP. Note: This does not take DST
  * into account. Currently, you will have to adjust the CLOCK_TIMEZONE define
  * manually to account for DST when needed.
  */
 void onSyncClock() {
-    configTime(CLOCK_TIMEZONE * 3600, 0, "pool.ntp.org", "time.nist.gov");
+    configTime(TZ_America_New_York, "pool.ntp.org");
     Serial.print(F("INIT: Waiting for NTP time sync..."));
     delay(500);
     while (!time(nullptr)) {
@@ -86,16 +101,13 @@ void onSyncClock() {
         delay(500);
     }
 
-    time_t now = time(nullptr);
-    struct tm *timeinfo = localtime(&now);
-
     Serial.println(F("DONE"));
     Serial.print(F("INFO: Current time: "));
-    Serial.println(asctime(timeinfo));
+    Serial.println(getCurrentTime());
 }
 
 /**
- * Publishes the system's current state to statusChannel.
+ * @brief Publishes the system's current state to the configured status topic.
  */
 void publishSystemState() {
     if (mqttClient.connected()) {
@@ -126,6 +138,37 @@ void publishSystemState() {
     }
 }
 
+/**
+ * @brief Publishes a discovery packet to the configured discovery topic.
+ */
+void publishDiscoveryPacket() {
+    if (mqttClient.connected()) {
+        actLED.on();
+
+        DynamicJsonDocument doc(250);
+        doc["name"] = config.hostname;
+        doc["class"] = DEVICE_CLASS;
+        doc["statusTopic"] = config.mqttTopicStatus;
+        doc["controlTopic"] = config.mqttTopicControl;
+
+        String jsonStr;
+        size_t len = serializeJson(doc, jsonStr);
+        Serial.print(F("INFO: Publishing discovery packet: "));
+        Serial.println(jsonStr);
+        if (!mqttClient.publish(config.mqttTopicStatus.c_str(), jsonStr.c_str(), len)) {
+            Serial.println(F("ERROR: Failed to publish message."));
+        }
+
+        doc.clear();
+        actLED.off();
+    }
+}
+
+/**
+ * @brief Halt-and-Catch-Fire routine. Disables the system and goes into a
+ * halt state, which is essentially an infinite loop that only feeds the
+ * watchdog. This method never returns.
+ */
 void HCF() {
     Serial.println(F("ERROR: ******* SYSTEM HALTED *******"));
     Serial.flush();
@@ -136,6 +179,9 @@ void HCF() {
     }
 }
 
+/**
+ * @brief Resets the I2C I/O controller (MCP23017) by pulsing the reset pin.
+ */
 void resetCommBus() {
     Serial.print(F("INFO: Resetting comm bus... "));
     digitalWrite(PIN_BUS_RESET, LOW);
@@ -145,8 +191,8 @@ void resetCommBus() {
 }
 
 /**
- * Disables the system and publishes the system's state to statusChannel,
- * then reboots the MCU.
+ * @brief Disables the system and publishes the system's state to the
+ * configured status topic, then soft-reboots the MCU.
  */
 void reboot() {
     Serial.println(F("INFO: Rebooting..."));
@@ -159,7 +205,7 @@ void reboot() {
 }
 
 /**
- * Prints network information details to the serial console.
+ * @brief Prints network information details to the serial console.
  */
 void printNetworkInfo() {
     Serial.print(F("INFO: Local IP: "));
@@ -178,7 +224,8 @@ void printNetworkInfo() {
 }
 
 /**
- * Scan for available networks and dump each discovered network to the console.
+ * @brief Scan for available networks and dump each discovered network to the
+ * console.
  */
 void getAvailableNetworks() {
     ESPCrashMonitor.defer();
@@ -196,7 +243,7 @@ void getAvailableNetworks() {
 }
 
 /**
- * Stores the in-memory configuration to a JSON file stored in SPIFFS.
+ * @brief Stores the in-memory configuration to a JSON file stored in SPIFFS.
  * If the file does not yet exist, it will be created (see CONFIG_FILE_PATH).
  * Errors will be reported to the serial console if the filesystem is not
  * mounted or if the file could not be opened for writing. Currently only
@@ -232,8 +279,9 @@ void saveConfiguration() {
     doc["wifiPassword"] = config.password;
     doc["mqttBroker"] = config.mqttBroker;
     doc["mqttPort"] = config.mqttPort;
-    doc["mqttControlChannel"] = config.mqttTopicControl;
-    doc["mqttStatusChannel"] = config.mqttTopicStatus;
+    doc["mqttControlTopic"] = config.mqttTopicControl;
+    doc["mqttStatusTopic"] = config.mqttTopicStatus;
+    doc["mqttDiscoveryTopic"] = config.mqttTopicDiscovery;
     doc["mqttUsername"] = config.mqttUsername;
     doc["mqttPassword"] = config.mqttPassword;
     #ifdef ENABLE_OTA
@@ -250,6 +298,9 @@ void saveConfiguration() {
     Serial.println(F("DONE"));
 }
 
+/**
+ * @brief Sets the running configuration to factory defaults.
+ */
 void setConfigurationDefaults() {
     String chipId = String(ESP.getChipId(), HEX);
     String defHostname = String(DEVICE_NAME) + "_" + chipId;
@@ -261,6 +312,7 @@ void setConfigurationDefaults() {
     config.mqttPort = MQTT_PORT;
     config.mqttTopicControl = MQTT_TOPIC_CONTROL;
     config.mqttTopicStatus = MQTT_TOPIC_STATUS;
+    config.mqttTopicDiscovery = MQTT_TOPIC_DISCOVERY;
     config.mqttUsername = "";
     config.password = DEFAULT_PASSWORD;
     config.sm = defaultSm;
@@ -275,6 +327,12 @@ void setConfigurationDefaults() {
     #endif
 }
 
+/**
+ * @brief Helper method that prints the specified warning message to the
+ * console.
+ * 
+ * @param message The message to print.
+ */
 void printWarningAndContinue(const __FlashStringHelper *message) {
     Serial.println();
     Serial.println(message);
@@ -282,9 +340,9 @@ void printWarningAndContinue(const __FlashStringHelper *message) {
 }
 
 /**
- * Loads the configuration from CONFIG_FILE_PATH into memory and uses that as
- * the running configuration. Will report errors to the serial console and
- * revert to the default configuration under the following conditions:
+ * @brief Loads the configuration from CONFIG_FILE_PATH into memory and uses
+ * that as the running configuration. Will report errors to the serial console
+ * and revert to the default configuration under the following conditions:
  * 1) The filesystem is not mounted.
  * 2) The config file does not exist in SPIFFS. In this case a new file
  * will be created and populated with the default configuration.
@@ -388,8 +446,9 @@ void loadConfiguration() {
     config.password = doc.containsKey("wifiPassword") ? doc["wifiPassword"].as<String>() : DEFAULT_PASSWORD;
     config.mqttBroker = doc.containsKey("mqttBroker") ? doc["mqttBroker"].as<String>() : MQTT_BROKER;
     config.mqttPort = doc.containsKey("mqttPort") ? doc["mqttPort"].as<int>() : MQTT_PORT;
-    config.mqttTopicControl = doc.containsKey("mqttControlChannel") ? doc["mqttControlChannel"].as<String>() : MQTT_TOPIC_CONTROL;
-    config.mqttTopicStatus = doc.containsKey("mqttStatusChannel") ? doc["mqttStatusChannel"].as<String>() : MQTT_TOPIC_STATUS;
+    config.mqttTopicControl = doc.containsKey("mqttControlTopic") ? doc["mqttControlTopic"].as<String>() : MQTT_TOPIC_CONTROL;
+    config.mqttTopicStatus = doc.containsKey("mqttStatusTopic") ? doc["mqttStatusTopic"].as<String>() : MQTT_TOPIC_STATUS;
+    config.mqttTopicDiscovery = doc.containsKey("mqttDiscoveryTopic") ? doc["mqttDiscoveryTopic"].as<String>() : MQTT_TOPIC_DISCOVERY;
     config.mqttUsername = doc.containsKey("mqttUsername") ? doc["mqttUsername"].as<String>() : "";
     config.mqttPassword = doc.containsKey("mqttPassword") ? doc["mqttPassword"].as<String>() : "";
 
@@ -403,7 +462,7 @@ void loadConfiguration() {
 }
 
 /**
- * Resume normal operation. This will resume any suspended tasks.
+ * @brief Resume normal operation. This will resume any suspended tasks.
  */
 void resumeNormal() {
     Serial.println(F("INFO: Resuming normal operation..."));
@@ -414,9 +473,9 @@ void resumeNormal() {
 }
 
 /**
- * Confirms with the user that they wish to do a factory restore. If so, then
- * clears the current configuration file in SPIFFS, then reboots. Upon reboot,
- * a new config file will be generated with default values.
+ * @brief Confirms with the user that they wish to do a factory restore. If so,
+ * then clears the current configuration file in SPIFFS, then reboots. Upon
+ * reboot, a new config file will be generated with default values.
  */
 void doFactoryRestore() {
     Serial.println();
@@ -455,9 +514,9 @@ void doFactoryRestore() {
 }
 
 /**
- * Handles incoming system control requests. This executes the specified
+ * @brief Handles incoming system control requests. This executes the specified
  * command if intended for this system, then responds by publishing the
- * system state to statusChannel.
+ * system state to the configured status topic.
  * @param command The command to execute.
  */
 void handleControlRequest(ControlCommand command) {
@@ -546,7 +605,7 @@ void handleControlRequest(ControlCommand command) {
 }
 
 /**
- * Handles incoming messages from the controlChannel channel the
+ * @brief Handles incoming messages from the controlChannel channel the
  * system is subscribed to.
  * @param topic The topic the message was received on.
  * @param payload The message received.
@@ -611,7 +670,7 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
 }
 
 /**
- * Attempts to re-connect to the MQTT broker if then connection is
+ * @brief Attempts to re-connect to the MQTT broker if then connection is
  * currently broken.
  * @return true if a connection to the MQTT broker is either already
  * established, or was successfully re-established; Otherwise, false.
@@ -642,6 +701,9 @@ bool reconnectMqttClient() {
 
             Serial.print(F("INFO: Publishing to channel: "));
             Serial.println(config.mqttTopicStatus);
+
+            Serial.print(F("INFO: Discovery topic: "));
+            Serial.println(config.mqttTopicDiscovery);
         }
         else {
             String failReason = TelemetryHelper::getMqttStateDesc(mqttClient.state());
@@ -657,7 +719,7 @@ bool reconnectMqttClient() {
 }
 
 /**
- * Callback method for the MQTT check task. This will check to see if still
+ * @brief Callback method for the MQTT check task. This will check to see if still
  * connected to the MQTT broker and then attempt to reconnect if not.
  */
 void onCheckMqtt() {
@@ -675,7 +737,7 @@ void onCheckMqtt() {
 }
 
 /**
- * Initializes the hardware serial port.
+ * @brief Initializes the hardware serial port.
  */
 void initSerial() {
     Serial.begin(SERIAL_BAUD);
@@ -690,6 +752,10 @@ void initSerial() {
     Serial.println(F(" booting..."));
 }
 
+/**
+ * @brief Scans the I2C bus for "known" expansion hardware. Primarily looks
+ * for the onboard MCP23017 chip so it can be initialized.
+ */
 void scanBusDevices() {
     byte error;
     byte address;
@@ -738,7 +804,7 @@ void scanBusDevices() {
 }
 
 /**
- * Initializes all output pins.
+ * @brief Initializes all output pins.
  */
 void initOutputs() {
     Serial.print(F("INIT: Initializing outputs... "));
@@ -747,6 +813,9 @@ void initOutputs() {
     Serial.println(F("DONE"));
 }
 
+/**
+ * @brief Initializes the I2C bus and scans for devices.
+ */
 void initComBus() {
     Serial.println(F("INIT: Initializing communication bus ..."));
 
@@ -772,6 +841,9 @@ void initComBus() {
     Serial.println(F("INIT: Comm bus initialization complete."));
 }
 
+/**
+ * @brief Initializes the light controller interface.
+ */
 void initLightController() {
     Serial.print(F("INIT: Initializing LightController... "));
     if (controller.detect()) {
@@ -785,7 +857,7 @@ void initLightController() {
 }
 
 /**
- * Initialize the SPIFFS filesystem.
+ * @brief Initialize the SPIFFS filesystem.
  */
 void initFilesystem() {
     Serial.print(F("INIT: Initializing SPIFFS and mounting filesystem... "));
@@ -802,7 +874,7 @@ void initFilesystem() {
 }
 
 /**
- * Initializes the MDNS responder (if enabled).
+ * @brief Initializes the MDNS responder (if enabled).
  */
 void initMDNS() {
     #ifdef ENABLE_MDNS
@@ -827,7 +899,7 @@ void initMDNS() {
 }
 
 /**
- * Initializes the MQTT client.
+ * @brief Initializes the MQTT client.
  */
 void initMQTT() {
     Serial.print(F("INIT: Initializing MQTT client... "));
@@ -843,7 +915,8 @@ void initMQTT() {
 }
 
 /**
- * Attempt to connect to the configured WiFi network. This will break any existing connection first.
+ * @brief Attempt to connect to the configured WiFi network. This will break
+ * any existing connection first.
  */
 void connectWifi() {
     if (config.hostname) {
@@ -900,7 +973,7 @@ void connectWifi() {
 }
 
 /**
- * Enter fail-safe mode. This will suspend all tasks, disable relay activation,
+ * @brief Enter fail-safe mode. This will suspend all tasks, disable relay activation,
  * and propmpt the user for configuration.
  */
 void failSafe() {
@@ -915,7 +988,7 @@ void failSafe() {
 }
 
 /**
- * Initializes the WiFi network interface.
+ * @brief Initializes the WiFi network interface.
  */
 void initWiFi() {
     Serial.println(F("INIT: Initializing WiFi... "));
@@ -929,7 +1002,7 @@ void initWiFi() {
 }
 
 /**
- * Initializes the OTA update listener if enabled.
+ * @brief Initializes the OTA update listener if enabled.
  */
 void initOTA() {
     #ifdef ENABLE_OTA
@@ -997,7 +1070,7 @@ void initOTA() {
 }
 
 /**
- * Initializes the task manager and all recurring tasks.
+ * @brief Initializes the task manager and all recurring tasks.
  */
 void initTaskManager() {
     Serial.print(F("INIT: Initializing task scheduler... "));
@@ -1014,7 +1087,7 @@ void initTaskManager() {
 }
 
 /**
- * Callback routine for checking WiFi connectivity.
+ * @brief Callback routine for checking WiFi connectivity.
  */
 void onCheckWiFi() {
     Serial.println(F("INFO: Checking WiFi connectivity..."));
@@ -1030,7 +1103,8 @@ void onCheckWiFi() {
 }
 
 /**
- * Initializes the crash monitor and dump any previous crash data to the serial console.
+ * @brief Initializes the crash monitor and dump any previous crash data to
+ * the serial console.
  */
 void initCrashMonitor() {
     Serial.print(F("INIT: Initializing crash monitor... "));
@@ -1040,15 +1114,28 @@ void initCrashMonitor() {
     delay(100);
 }
 
+/**
+ * @brief Handler callback for when the host name is changed from the CLI.
+ * This will set the host name in the running config and the re-init MDNS.
+ * 
+ * @param newHostname The new hostname.
+ */
 void handleNewHostname(const char* newHostname) {
-    config.hostname = newHostname;
-    if (config.hostname) {
-        WiFi.hostname(config.hostname);
-    }
+    if (config.hostname != newHostname) {
+        config.hostname = newHostname;
+        if (config.hostname) {
+            WiFi.hostname(config.hostname);
+        }
 
-    initMDNS();
+        initMDNS();
+    }
 }
 
+/**
+ * @brief Handler callback for when switching to DHCP from the CLI. This
+ * sets the DHCP flag in the running config and then forces the WiFi interface
+ * to attempt to get it's network config from DHCP.
+ */
 void handleSwitchToDhcp() {
     if (config.useDhcp) {
         Serial.println(F("INFO: DHCP mode already set. Skipping..."));
@@ -1061,6 +1148,16 @@ void handleSwitchToDhcp() {
     }
 }
 
+/**
+ * @brief Handler callback for when switching to static network config from the
+ * CLI. This will set the specified network settings in the running config and
+ * then force the WiFi interface to use the new settings.
+ * 
+ * @param newIp The new local IP address.
+ * @param newSm The new subnet mask.
+ * @param newGw The new gateway IP address.
+ * @param newDns The new DNS IP address.
+ */
 void handleSwitchToStatic(IPAddress newIp, IPAddress newSm, IPAddress newGw, IPAddress newDns) {
     config.ip = newIp;
     config.sm = newSm;
@@ -1070,6 +1167,13 @@ void handleSwitchToStatic(IPAddress newIp, IPAddress newSm, IPAddress newGw, IPA
     WiFi.config(config.ip, config.gw, config.sm, config.dns);
 }
 
+/**
+ * @brief Handler callback that fires when the users requests a network
+ * reconnect from the CLI. This will check the current connection state
+ * and if not connected, will attempt to reconnect. If reconnect succeeds,
+ * normal operation will be resumed and will automatically exit the CLI.
+ * If reconnect fails, then will remain in the CLI.
+ */
 void handleReconnectFromConsole() {
     // Attempt to reconnect to WiFi.
     onCheckWiFi();
@@ -1083,18 +1187,46 @@ void handleReconnectFromConsole() {
     }
 }
 
+/**
+ * @brief Handler callback that fires with the user changes the WiFi settings
+ * from the CLI. Sets the new WiFi SSID and/or password in the running config,
+ * then attempts to connect to the WiFi.
+ * 
+ * @param newSsid The new SSID.
+ * @param newPassword The new password.
+ */
 void handleWifiConfig(String newSsid, String newPassword) {
-    config.ssid = newSsid;
-    config.password = newPassword;
-    connectWifi();
+    if (config.ssid != newSsid || config.password != newPassword) {
+        config.ssid = newSsid;
+        config.password = newPassword;
+        connectWifi();
+    }
 }
 
+/**
+ * @brief Handler callback that fires when user requests to save the current
+ * running config. This persists the in-memory configuration settings to flash
+ * and then reconnects the WiFi.
+ */
 void handleSaveConfig() {
     saveConfiguration();
     WiFi.disconnect(true);
     onCheckWiFi();
 }
 
+/**
+ * @brief Handler callback that fires when the user makes changes to the MQTT
+ * config from the CLI. This will unsubscribe from any subscribed topics and
+ * disconnect from the MQTT broker, then apply the settings to the running
+ * config, then re-init the MQTT client.
+ * 
+ * @param newBroker The new MQTT broker.
+ * @param newPort The new port.
+ * @param newUsername The new MQTT username.
+ * @param newPassw The new MQTT password.
+ * @param newConChan The new control topic.
+ * @param newStatChan The new status topic.
+ */
 void handleMqttConfigCommand(String newBroker, int newPort, String newUsername, String newPassw, String newConChan, String newStatChan) {
     mqttClient.unsubscribe(config.mqttTopicControl.c_str());
     mqttClient.disconnect();
@@ -1110,24 +1242,39 @@ void handleMqttConfigCommand(String newBroker, int newPort, String newUsername, 
     Serial.println();
 }
 
+/**
+ * @brief 
+ * 
+ */
 void turnAllLightsOn() {
     Serial.println(F("INFO: Turning all lights on."));
     controller.allLightsOn();
     publishSystemState();
 }
 
+/**
+ * @brief Turns all lights off.
+ */
 void turnAllLightsOff() {
     Serial.println(F("INFO: Turning all lights off."));
     controller.allLightsOff();
     publishSystemState();
 }
 
+/**
+ * @brief Handler callback that resets the I2C bus from the CLI. This will
+ * actually reset the onboard MCP23017, then re-init the I2C bus, redetect
+ * hardware, and then re-init the light controller.
+ */
 void handleBusResetCommand() {
     resetCommBus();
     initComBus();
     initLightController();
 }
 
+/**
+ * @brief Initializes the local CLI.
+ */
 void initConsole() {
     Serial.print(F("INIT: Initializing console... "));
 
@@ -1161,7 +1308,7 @@ void initConsole() {
 }
 
 /**
- * Bootstrap routine. This is called once at boot and initializes all
+ * @brief Bootstrap routine. This is called once at boot and initializes all
  * subsystems.
  */
 void setup() {
@@ -1183,7 +1330,7 @@ void setup() {
 }
 
 /**
- * The main program loop.
+ * @brief The main program loop.
  */
 void loop() {
     ESPCrashMonitor.iAmAlive();
