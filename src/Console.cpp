@@ -1,5 +1,5 @@
 #include "Console.h"
-#include "ESPCrashMonitor-master/ESPCrashMonitor.h"
+#include "ESPCrashMonitor.h"
 
 ConsoleClass::ConsoleClass() {}
 

@@ -33,7 +33,7 @@
 #include "PubSubClient.h"
 #include "TaskScheduler.h"
 #include "ResetManager.h"
-#include "ESPCrashMonitor-master/ESPCrashMonitor.h"
+#include "ESPCrashMonitor.h"
 #include "ArduinoJson.h"
 #include "LightController.h"
 #include "Console.h"
